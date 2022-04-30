@@ -6,12 +6,15 @@ print (3 + 4.5) #basic arithmetic,+ addition
 print (3 - 4.5) #- subtraction
 print (3 * 4.5) #* multiplication
 print (3 / 4.5) #/ dividation
+print("\n")
 
 print(3 * 4 + 5) #use parentheses
 print(3 * (4 + 5))
+print("\n")
 
 #modulates operator
 print(10 % 3) #read as: ten mod three #get the remainder
+print("\n")
 
 #can set numbers inside of variables
 my_num = 5
@@ -21,6 +24,7 @@ my_num = 5
 print(str(my_num)) #handy when want to print out number alongside string
 print(str(my_num) + " is my favorite number")
 #print(my_num + " my favorite number") will show an error
+print("\n")
 
 #number function could perform an operation like mathematical operation on number or give information about number
 #1. abs = get absolute value
