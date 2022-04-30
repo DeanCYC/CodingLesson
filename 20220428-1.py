@@ -5,15 +5,17 @@ print("Giraffe Academy")
 print("Giraffe\nAcademy") #create new line
 print("Giraffe\"Academy") #escape character
 print("Giraffe\Academy") #normal backslash
-
+print("\n")
 
 #creat a string variable
 phrase = "Giraffe Academy"
 print(phrase)
+print("\n")
 
 #concatenation
 phrase = "Giraffe Academy"
 print(phrase + " is cool")
+print("\n")
 
 #functions
 #1.modify strings
