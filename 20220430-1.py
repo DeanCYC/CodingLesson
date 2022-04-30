@@ -69,4 +69,3 @@ print("\n")
 friends = ["Kevin", "Karen", "Jim", "Jim", "Oscar", "Toby"]
 friends2 = friends.copy() #copy the list of firends
 print(friends2)
-print("\n")
