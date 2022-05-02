@@ -40,3 +40,7 @@ def say_hi3(name, age): #allowing this function to receive two parameters, name 
 
 say_hi3("Mike", 35) #can pass any type of data into a function, Ex.integer
 say_hi3("Steve", 70)
+
+#Generally, it's a good idea to break your code up into different functions, 
+#so whenever you have a grouping of code and that's designed to perform a specific task
+#That's usually a good candidate to be put inside of a function
