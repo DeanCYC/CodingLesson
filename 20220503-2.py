@@ -1,4 +1,5 @@
 #HW14-2 If statements
+
 #if statements
 is_male = True #create a boolean variable
 #can use if statement to cheak to see what the value of this variable is and if it's true then can do something
