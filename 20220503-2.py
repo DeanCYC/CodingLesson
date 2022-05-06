@@ -51,4 +51,4 @@ elif not(is_male5) and is_tall3:
     print("You are not a male but are tall")
 else:
     print("You are not a male and not tall") #one of condition or both conditions are false
-print("\n")
+
