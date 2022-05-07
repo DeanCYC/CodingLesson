@@ -6,7 +6,7 @@ while i <=10:  #condition i ＝ raise by Japanese
     i += 1
 
 print("Don't with loop")
-
+print("\n")
 #1. check the condition first time
 #2. loop though all the code
 #3. go back up to the top and check it again
