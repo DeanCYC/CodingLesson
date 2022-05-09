@@ -11,3 +11,4 @@ print("\n")
 #2. loop though all the code
 #3. go back up to the top and check it again
 #4. once the condition is not true, then come out from while loop
+    print("\n")
