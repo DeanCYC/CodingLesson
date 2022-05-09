@@ -21,3 +21,4 @@ if out_of_guesses:
 else:
     print("You win!") #2. user guessed correctly
     print("\n")
+        print("\n")
