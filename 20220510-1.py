@@ -1,6 +1,6 @@
 #HW21 Exponent function
 #allow to take a certain number and raise it to a specific power
-#Usual
+#Python formula
 print(2**3) #2^3
 print("\n")
 
