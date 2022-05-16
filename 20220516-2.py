@@ -4,8 +4,7 @@
 #if the version of Python is not lastest version, may need to install "pip" separately
 #ex. python.docx
 #1. open terminal
-#2. check version:
-pip --version
+#2. check version via pip --version
 #4. install external module that want to use via pip
 #5. input "pip install python-docx"
 #Most external modules are able to be install via pop
