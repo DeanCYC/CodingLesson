@@ -19,6 +19,6 @@ def run_test(questions): #create question array
         answer = input(question.prompt)
         if answer == question.answer: #check answer that input by user is euqal to the answer of current question
             score += 1
-    print("You got " + str(score) + "/" + str(len(questions)) + " Correct")
+    print("You got " + str(score) + "/" + str(len(questions)) + " Correct") #count the number of correct answer and show the number of question
 
 run_test(questions)
