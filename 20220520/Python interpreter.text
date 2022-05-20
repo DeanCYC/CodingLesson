@@ -1,0 +1,15 @@
+HW33 Python interpreter
+Python interpreter: An environment that we can use to execute python commands
+without a graphical user interface
+-> can use Terminal@Mac as Python interpreter
+Input following in Terminal: python3, can open Python interpreter
+Examples:
+1. print("Hello World")
+2. num1 = 10
+   num2 = 90
+   print(num1 + num2)
+3. def say_hi(name):
+      print("Hello " + name);
+   say_hi("Mike")
+
+Can us Python interpreter for some quick and dirty tests
