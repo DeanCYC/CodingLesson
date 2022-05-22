@@ -8,7 +8,7 @@ For example, calling capital_indexes("HeLlO") should return the list [0, 2, 4].
 
 def capital_indexes(phrase):
     result = []
-    for index, char in enumerate(phrase):
+    for index, char in enumerate(phrase): #https://vimsky.com/zh-tw/examples/usage/enumerate-in-python.html
         if char.isupper(): 
             result.append(index)
     return result
