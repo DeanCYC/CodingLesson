@@ -8,9 +8,9 @@ For example, calling capital_indexes("HeLlO") should return the list [0, 2, 4].
 
 def capital_indexes(phrase):
     result = []
-    for letter in phrase:
-        if letter.lower(): 
-            result.append(phrase.index)
+    for index, char in enumerate(phrase):
+        if char.isupper(): 
+            result.append(index)
     return result
     
 print(capital_indexes(input("Enter a phrase: ")))
