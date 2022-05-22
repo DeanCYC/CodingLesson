@@ -1,0 +1,13 @@
+1. Q: What are functions in Python?
+A: Functions are pieces of code that perform a unit of work.
+2. Q: What are keywords in Python?
+A: Keywords are reserved words that are used to construct instructions.
+3. Q: What does the print function do in Python?
+A: The print function outputs messages to the screen
+4. Q: Output a message that says "Programming in Python is fun!" to the screen.
+A: print("Programming in Python is fun!")
+5. Q:Replace the ___ placeholder and calculate the Golden ratio: (1+(5**(1/2)))/2
+Tip: to calculate the square root of a number xx, you can use x**(1/2).
+A:
+ratio = ((1+(5**(1/2)))/2)
+print(ratio)
