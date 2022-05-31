@@ -8,7 +8,7 @@ print(t[3])
 for member in t:
     print(member)
 # 重新給元組賦值
-# t[0] = '王大錘'  # TypeError
+# t[0] = 'A'  # TypeError
 # 變量t重新引用了新的元組原來的元組將被垃圾回收
 t = ('A', 20, True, '台北')
 print(t)

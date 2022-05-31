@@ -22,3 +22,5 @@ for elem in list1:
 # 通過enumerate函數處理列表之後再遍歷可以同時獲得元素索引和值
 for index, elem in enumerate(list1):
     print(index, elem)
+    
+#待解
