@@ -1,5 +1,7 @@
 #事件處理
 
+import pygame
+
 def main():
     # 定義用來裝所有球的容器
     balls = []
