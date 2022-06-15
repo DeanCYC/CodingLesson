@@ -1,0 +1,86 @@
+使用JavaScript控制行為
+JavaScript基本語法
+    語句和註釋
+    變量和數據類型
+        聲明和賦值
+        簡單數據類型和復雜數據類型
+        變量的命名規則
+    表達式和運算符
+        賦值運算符
+        算術運算符
+        比較運算符
+        邏輯運算符：&&、||、!
+    分支結構
+        if...else...
+        switch...cas...default...
+    循環結構
+        for循環
+        while循環
+        do...while循環
+    數組
+        創建數組
+        操作數組中的元素
+    函數
+        聲明函數
+        調用函數
+        參數和返回值
+        匿名函數
+        立即調用函數
+面向對象
+    對象的概念
+    創建對象的字面量語法
+    訪問成員運算符
+    創建對象的構造函數語法
+        this關鍵字
+    添加和刪除屬性
+        delete關鍵字
+    標準對象
+        Number / String / Boolean / Symbol / Array / Function
+        Date / Error / Math / RegExp / Object / Map / Set
+        JSON / Promise / Generator / Reflect / Proxy
+BOM
+    window對象的屬性和方法
+    history對象
+        forward() / back() / go()
+    location對象
+    navigator對象
+    screen對象
+DOM
+    DOM樹
+    訪問元素
+        getElementById() / querySelector()
+        getElementsByClassName() / getElementsByTagName() / querySelectorAll()
+        parentNode / previousSibling / nextSibling / children / firstChild / lastChild
+    操作元素
+        nodeValue
+        innerHTML / textContent / createElement() / createTextNode() / appendChild() / insertBefore() / removeChild()
+        className / id / hasAttribute() / getAttribute() / setAttribute() / removeAttribute()
+    事件處理
+        事件類型
+            UI事件：load / unload / error / resize / scroll
+            鍵盤事件：keydown / keyup / keypress
+            鼠標事件：click / dbclick / mousedown / mouseup / mousemove / mouseover / mouseout
+            焦點事件：focus / blur
+            表單事件：input / change / submit / reset / cut / copy / paste / select
+        事件綁定
+            HTML事件處理程序（不推薦使用，因為要做到標籤與代碼分離）
+            傳統的DOM事件處理程序（只能附加一個回調函數）
+            事件監聽器（舊的瀏覽器中不被支持）
+        事件流：事件捕獲 / 事件冒泡
+        事件對象（低版本IE中的window.event）
+            target（有些瀏覽器使用srcElement）
+            type
+            cancelable
+            preventDefault()
+            stopPropagation()（低版本IE中的cancelBubble）
+        鼠標事件 - 事件發生的位置
+            屏幕位置：screenX和screenY
+            頁面位置：pageX和pageY
+            客戶端位置：clientX和clientY
+        鍵盤事件 - 哪個鍵被按下了
+            keyCode屬性（有些瀏覽器使用which）
+            String.fromCharCode(event.keyCode)
+        HTML5事件
+            DOMContentLoaded
+            hashchange
+            beforeunload
