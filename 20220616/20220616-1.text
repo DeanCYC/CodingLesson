@@ -1,0 +1,45 @@
+使用jQuery
+jQuery概述
+    Write Less Do More（用更少的代碼來完成更多的工作）
+    使用CSS選擇器來查找元素（更簡單更方便）
+    使用jQuery方法來操作元素（解決瀏覽器兼容性問題、應用於所有元素並施加多個方法）
+引入jQuery
+    下載jQuery的開發版和壓縮版
+    從CDN加載jQuery
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        window.jQuery || 
+            document.write('<script src="js/jquery-3.3.1.min.js"></script>')
+    </script>
+查找元素
+    選擇器
+        * / element / #id / .class / selector1, selector2
+        ancestor descendant / parent>child / previous+next / previous~siblings
+    篩選器
+        基本篩選器：:not(selector) / :first / :last / :even / :odd / :eq(index) / :gt(index) / :lt(index) / :animated / :focus
+        內容篩選器：:contains('…') / :empty / :parent / :has(selector)
+        可見性篩選器：:hidden / :visible
+        子節點篩選器：:nth-child(expr) / :first-child / :last-child / :only-child
+        屬性篩選器：[attribute] / [attribute='value'] / [attribute!='value'] / [attribute^='value'] / [attribute$='value'] / [attribute|='value'] / [attribute~='value']
+    表單：:input / :text / :password / :radio / :checkbox / :submit / :image / :reset / :button / :file / :selected / :enabled / :disabled / :checked
+執行操作
+內容操作
+獲取/修改內容：html() / text() / replaceWith() / remove()
+獲取/設置元素：before() / after() / prepend() / append() / remove() / clone() / unwrap() / detach() / empty() / add()
+獲取/修改屬性：attr() / removeAttr() / addClass() / removeClass() / css()
+獲取/設置表單值：val()
+查找操作
+查找方法：find() / parent() / children() / siblings() / next() / nextAll() / prev() / prevAll()
+篩選器：filter() / not() / has() / is() / contains()
+索引編號：eq()
+尺寸和位置
+尺寸相關：height() / width() / innerHeight() / innerWidth() / outerWidth() / outerHeight()
+位置相關：offset() / position() / scrollLeft() / scrollTop()
+特效和動畫
+基本動畫：show() / hide() / toggle()
+消失出現：fadeIn() / fadeOut() / fadeTo() / fadeToggle()
+滑動效果：slideDown() / slideUp() / slideToggle()
+自定義：delay() / stop() / animate()
+事件
+文檔加載：ready() / load()
+用戶交互：on() / off()
