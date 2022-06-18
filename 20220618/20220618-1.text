@@ -1,0 +1,196 @@
+前端框架
+漸進式框架 - Vue.js
+前後端分離開發（前端渲染）必選框架。
+
+快速上手
+    1. 引入Vue的JavaScript文件，我們仍然推薦從CDN服務器加載它。
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    2. 數據綁定（聲明式渲染 ）。
+
+    <div id="app">
+        <h1>{{ product }}庫存信息</h1>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        const app = new Vue({
+            el: '#app',
+            data: {
+                product: 'iPhone X'
+            }
+        });
+    </script>
+    3. 條件與循環。
+
+    <div id="app">
+        <h1>庫存信息</h1>
+        <hr>
+        <ul>
+            <li v-for="product in products">
+                {{ product.name }} - {{ product.quantity }}
+                <span v-if="product.quantity === 0">
+                    已經售罄
+                </span>
+            </li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        const app = new Vue({
+            el: '#app',
+            data: {
+                products: [
+                    {"id": 1, "name": "iPhone X", "quantity": 20},
+                    {"id": 2, "name": "華為 Mate20", "quantity": 0},
+                    {"id": 3, "name": "小米 Mix3", "quantity": 50}
+                ]
+            }
+        });
+    </script>
+    4. 計算屬性。
+
+    <div id="app">
+        <h1>庫存信息</h1>
+        <hr>
+        <ul>
+            <li v-for="product in products">
+                {{ product.name }} - {{ product.quantity }}
+                <span v-if="product.quantity === 0">
+                    已經售罄
+                </span>
+            </li>
+        </ul>
+        <h2>庫存總量：{{ totalQuantity }}台</h2>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        const app = new Vue({
+            el: '#app',
+            data: {
+                products: [
+                    {"id": 1, "name": "iPhone X", "quantity": 20},
+                    {"id": 2, "name": "華為 Mate20", "quantity": 0},
+                    {"id": 3, "name": "小米 Mix3", "quantity": 50}
+                ]
+            },
+            computed: {
+                totalQuantity() {
+                    return this.products.reduce((sum, product) => {
+                        return sum + product.quantity
+                    }, 0);
+                }
+            }
+        });
+    </script>
+    5. 處理事件。
+
+    <div id="app">
+        <h1>庫存信息</h1>
+        <hr>
+        <ul>
+            <li v-for="product in products">
+                {{ product.name }} - {{ product.quantity }}
+                <span v-if="product.quantity === 0">
+                    已經售罄
+                </span>
+                <button @click="product.quantity += 1">
+                    增加庫存
+                </button>
+            </li>
+        </ul>
+        <h2>庫存總量：{{ totalQuantity }}台</h2>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        const app = new Vue({
+            el: '#app',
+            data: {
+                products: [
+                    {"id": 1, "name": "iPhone X", "quantity": 20},
+                    {"id": 2, "name": "華為 Mate20", "quantity": 0},
+                    {"id": 3, "name": "小米 Mix3", "quantity": 50}
+                ]
+            },
+            computed: {
+                totalQuantity() {
+                    return this.products.reduce((sum, product) => {
+                        return sum + product.quantity
+                    }, 0);
+                }
+            }
+        });
+    </script>
+    6. 用戶輸入。
+
+    <div id="app">
+        <h1>庫存信息</h1>
+        <hr>
+        <ul>
+            <li v-for="product in products">
+                {{ product.name }} - 
+                <input type="number" v-model.number="product.quantity" min="0">
+                <span v-if="product.quantity === 0">
+                    已經售罄
+                </span>
+                <button @click="product.quantity += 1">
+                    增加庫存
+                </button>
+            </li>
+        </ul>
+        <h2>庫存總量：{{ totalQuantity }}台</h2>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        const app = new Vue({
+            el: '#app',
+            data: {
+                products: [
+                    {"id": 1, "name": "iPhone X", "quantity": 20},
+                    {"id": 2, "name": "華為 Mate20", "quantity": 0},
+                    {"id": 3, "name": "小米 Mix3", "quantity": 50}
+                ]
+            },
+            computed: {
+                totalQuantity() {
+                    return this.products.reduce((sum, product) => {
+                        return sum + product.quantity
+                    }, 0);
+                }
+            }
+        });
+    </script>
+    7. 通過網絡加載JSON數據。
+
+    <div id="app">
+        <h2>庫存信息</h2>
+        <ul>
+            <li v-for="product in products">
+                {{ product.name }} - {{ product.quantity }}
+                <span v-if="product.quantity === 0">
+                    已經售罄
+                </span>
+            </li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        const app = new Vue({
+            el: '#app',
+            data: {
+                products: []
+            }，
+            created() {
+                fetch('https://jackfrued.top/api/products')
+                    .then(response => response.json())
+                    .then(json => {
+                        this.products = json
+                    });
+            }
+        });
+    </script>
