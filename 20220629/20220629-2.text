@@ -1,0 +1,78 @@
+Shell編程
+
+之前我們提到過，Shell是一個連接用戶和操作系統的應用程序，它提供了人機交互的界面（接口），用戶通過這個界面訪問操作系統內核的服務。 Shell腳本是一種為Shell編寫的腳本程序，我們可以通過Shell腳本來進行系統管理，同時也可以通過它進行文件操作。總之，編寫Shell腳本對於使用Linux系統的人來說，應該是一項標配技能。
+網路上有大量關於Shell腳本的相關知識，我不打算再此對Shell腳本做一個全面系統的講解，我們通過下面的代碼來感性的認識下Shell腳本就行了。
+
+例子1：輸入兩個整數m和n，計算從m到n的整數求和的結果。
+    #!/usr/bin/bash
+    printf 'm = '
+    read m
+    printf 'n = '
+    read n
+    a=$m
+    sum=0
+    while [ $a -le $n ]
+    do
+        sum=$[ sum + a ]
+        a=$[ a + 1 ]
+    done
+    echo '結果: '$sum
+
+例子2：自動創建文件夾和指定數量的文件。
+    #!/usr/bin/bash
+    printf '輸入文件夾名: '
+    read dir
+    printf '輸入文件名: '
+    read file
+    printf '輸入文件數量(<1000): '
+    read num
+    if [ $num -ge 1000 ]
+    then
+        echo '文件數量不能超過1000'
+    else
+        if [ -e $dir -a -d $dir ]
+        then
+            rm -rf $dir
+        else
+            if [ -e $dir -a -f $dir ]
+            then
+                rm -f $dir
+            fi
+        fi
+        mkdir -p $dir
+        index=1
+        while [ $index -le $num ]
+        do
+            if [ $index -lt 10 ]
+            then
+                pre='00'
+            elif [ $index -lt 100 ]
+            then
+                pre='0'
+            else
+                pre=''
+            fi
+            touch $dir'/'$file'_'$pre$index
+            index=$[ index + 1 ]
+        done
+    fi
+
+例子3：自動安裝指定版本的Redis。
+    #!/usr/bin/bash
+    install_redis() {
+        if ! which redis-server > /dev/null
+        then
+            cd /root
+            wget $1$2'.tar.gz' >> install.log
+            gunzip /root/$2'.tar.gz'
+            tar -xf /root/$2'.tar'
+            cd /root/$2
+            make >> install.log
+            make install >> install.log
+            echo '安裝完成'
+        else
+            echo '已經安裝過Redis'
+        fi
+    }
+
+    install_redis 'http://download.redis.io/releases/' $1
