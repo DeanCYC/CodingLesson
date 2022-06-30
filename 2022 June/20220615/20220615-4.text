@@ -1,0 +1,13 @@
+JavaScript API
+    客戶端存儲 - localStorage和sessionStorage
+        localStorage.colorSetting = '#a4509b';
+        localStorage['colorSetting'] = '#a4509b';
+        localStorage.setItem('colorSetting', '#a4509b');
+    獲取位置信息 - geolocation
+        navigator.geolocation.getCurrentPosition(function(pos) { 		  
+            console.log(pos.coords.latitude)
+            console.log(pos.coords.longitude)
+        })
+    從服務器獲取數據 - Fetch API
+    繪製圖形 - <canvas>的API
+    音視頻 - <audio>和<video>的API

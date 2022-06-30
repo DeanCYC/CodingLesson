@@ -1,0 +1,14 @@
+別名
+1.alias
+    [root ~]# alias ll='ls -l'
+    [root ~]# alias frm='rm -rf'
+    [root ~]# ll
+    ...
+    drwxr-xr-x  2 root       root   4096 Jun 20 12:52 abc
+    ...
+    [root ~]# frm abc
+
+2.unalias
+    [root ~]# unalias frm
+    [root ~]# frm sohu.html
+    -bash: frm: command not found

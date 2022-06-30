@@ -1,0 +1,127 @@
+基礎命令
+Linux系統的命令通常都是如下所示的格式：
+    命令名稱 [命名參數] [命令對象]
+
+    1. 獲取登錄信息 - w / who / last/ lastb。
+        [root ~]# w
+        23:31:16 up 12:16,  2 users,  load average: 0.00, 0.01, 0.05
+        USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+        root     pts/0    182.139.66.250   23:03    4.00s  0.02s  0.00s w
+        jackfrue pts/1    182.139.66.250   23:26    3:56   0.00s  0.00s -bash
+        [root ~]# who
+        root     pts/0        2018-04-12 23:03 (182.139.66.250)
+        jackfrued pts/1        2018-04-12 23:26 (182.139.66.250)
+        [root ~]# who am i
+        root     pts/0        2018-04-12 23:03 (182.139.66.250)
+        [root ~]# who mom likes
+        root     pts/0        2018-04-12 23:03 (182.139.66.250)
+        [root ~]# last
+        root     pts/0        117.136.63.184   Sun May 26 18:57   still logged in   
+        reboot   system boot  3.10.0-957.10.1. Mon May 27 02:52 - 19:10  (-7:-42)   
+        root     pts/4        117.136.63.184   Sun May 26 18:51 - crash  (08:01)    
+        root     pts/4        117.136.63.184   Sun May 26 18:49 - 18:49  (00:00)    
+        root     pts/3        117.136.63.183   Sun May 26 18:35 - crash  (08:17)    
+        root     pts/2        117.136.63.183   Sun May 26 18:34 - crash  (08:17)    
+        root     pts/0        117.136.63.183   Sun May 26 18:10 - crash  (08:42)    
+
+    2.查看自己使用的Shell - ps。
+    Shell也被稱為“殼”或“殼程序”，它是用戶與操作系統內核交流的翻譯官，簡單的說就是人與計算機交互的界面和接口。目前很多Linux系統默認的Shell都是bash（Bourne Again SHell），因為它可以使用tab鍵進行命令和路徑補全、可以保存歷史命令、可以方便的配置環境變量以及執行批處理操作。
+    [root ~]# ps
+    PID TTY          TIME CMD
+    3531 pts/0    00:00:00 bash
+    3553 pts/0    00:00:00 ps
+
+    3.查看命令的說明和位置 - whatis / which / whereis。
+    [root ~]# whatis ps
+    ps (1)        - report a snapshot of the current processes.
+    [root ~]# whatis python
+    python (1)    - an interpreted, interactive, object-oriented programming language
+    [root ~]# whereis ps
+    ps: /usr/bin/ps /usr/share/man/man1/ps.1.gz
+    [root ~]# whereis python
+    python: /usr/bin/python /usr/bin/python2.7 /usr/lib/python2.7 /usr/lib64/python2.7 /etc/python /usr/include/python2.7 /usr/share/man/man1/python.1.gz
+    [root ~]# which ps
+    /usr/bin/ps
+    [root ~]# which python
+    /usr/bin/python
+
+    4.清除屏幕上顯示的內容 - clear。
+
+    5.查看幫助文檔 - man / info / --help / apropos。
+    [root@izwz97tbgo9lkabnat2lo8z ~]# ps --help
+    Usage:
+    ps [options]
+    Try 'ps --help <simple|list|output|threads|misc|all>'
+    or 'ps --help <s|l|o|t|m|a>'
+    for additional help text.
+    For more details see ps(1).
+    [root@izwz97tbgo9lkabnat2lo8z ~]# man ps
+    PS(1)                                User Commands                                PS(1)
+    NAME
+        ps - report a snapshot of the current processes.
+    SYNOPSIS
+        ps [options]
+    DESCRIPTION
+    ...
+
+    6.查看系統和主機名 - uname / hostname。
+    [root@izwz97tbgo9lkabnat2lo8z ~]# uname
+    Linux
+    [root@izwz97tbgo9lkabnat2lo8z ~]# hostname
+    izwz97tbgo9lkabnat2lo8z
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# cat /etc/centos-release
+    CentOS Linux release 7.6.1810 (Core)
+    #說明：cat是連接文件內容並打印到標準輸出的命令，後面會講到該命令；/etc是Linux系統上的一個非常重要的目錄，它保存了很多的配置文件；centos-release是該目錄下的一個文件，因為我自己使用的Linux發行版本是CentOS 7.6，因此這裡會有一個這樣的文件。
+
+    7.時間和日期 - date / cal。
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# date
+    Wed Jun 20 12:53:19 CST 2018
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# cal
+        June 2018
+    Su Mo Tu We Th Fr Sa
+                    1  2
+    3  4  5  6  7  8  9
+    10 11 12 13 14 15 16
+    17 18 19 20 21 22 23
+    24 25 26 27 28 29 30
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# cal 5 2017
+        May 2017
+    Su Mo Tu We Th Fr Sa
+        1  2  3  4  5  6
+    7  8  9 10 11 12 13
+    14 15 16 17 18 19 20
+    21 22 23 24 25 26 27
+    28 29 30 31
+
+    8.重啟和關機 - reboot / shutdown。
+    [root ~]# shutdown -h +5
+    Shutdown scheduled for Sun 2019-05-26 19:34:27 CST, use 'shutdown -c' to cancel.
+    [root ~]# 
+    Broadcast message from root (Sun 2019-05-26 19:29:27 CST):
+
+    The system is going down for power-off at Sun 2019-05-26 19:34:27 CST!
+    [root ~]# shutdown -c
+
+    Broadcast message from root (Sun 2019-05-26 19:30:22 CST):
+
+    The system shutdown has been cancelled at Sun 2019-05-26 19:31:22 CST!
+    [root ~]# shutdown -r 23:58
+    Shutdown scheduled for Sun 2019-05-26 23:58:00 CST, use 'shutdown -c' to cancel.
+    [root ~]# shutdown -c
+
+    Broadcast message from root (Sun 2019-05-26 19:31:06 CST):
+
+    The system shutdown has been cancelled at Sun 2019-05-26 19:32:06 CST!
+    #說明：在執行shutdown命令時會向登錄系統的用戶發出警告，可以在命令後面跟上警告消息來替換默認的警告消息，也可以在-h參數後通過now來表示立刻關機。
+
+    9.退出登錄 - exit / logout。
+
+    10.查看歷史命令 - history。 
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# history
+    ...
+    452  ls
+    453  cd Python-3.6.5/
+    454  clear
+    455  history
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# !454
+    #說明：查看到歷史命令之後，可以用!歷史命令編號來重新執行該命令；通過history -c可以清除歷史命令。

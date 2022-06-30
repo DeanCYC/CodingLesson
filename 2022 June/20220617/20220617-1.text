@@ -1,0 +1,66 @@
+執行操作
+    內容操作
+        獲取/修改內容：html() / text() / replaceWith() / remove()
+        獲取/設置元素：before() / after() / prepend() / append() / remove() / clone() / unwrap() / detach() / empty() / add()
+        獲取/修改屬性：attr() / removeAttr() / addClass() / removeClass() / css()
+        獲取/設置表單值：val()
+    查找操作
+        查找方法：find() / parent() / children() / siblings() / next() / nextAll() / prev() / prevAll()
+        篩選器：filter() / not() / has() / is() / contains()
+        索引編號：eq()
+    尺寸和位置
+        尺寸相關：height() / width() / innerHeight() / innerWidth() / outerWidth() / outerHeight()
+        位置相關：offset() / position() / scrollLeft() / scrollTop()
+    特效和動畫
+        基本動畫：show() / hide() / toggle()
+        消失出現：fadeIn() / fadeOut() / fadeTo() / fadeToggle()
+        滑動效果：slideDown() / slideUp() / slideToggle()
+        自定義：delay() / stop() / animate()
+    事件
+        文檔加載：ready() / load()
+        用戶交互：on() / off()
+鍊式操作
+檢測頁面是否可用
+<script>
+    $(document).ready(function() {
+        
+    });
+</script>
+<script>
+    $(function() {
+        
+    });
+</script>
+
+jQuery插件
+    jQuery Validation
+    jQuery Treeview
+    jQuery Autocomplete
+    jQuery UI
+避免和其他庫的衝突
+先引入其他庫再引入jQuery的情況。
+
+<script src="other.js"></script>
+<script src="jquery.js"></script>
+<script>
+	jQuery.noConflict();
+    jQuery(function() {
+        jQuery('div').hide();
+    });
+</script>
+先引入jQuery再引入其他庫的情況。
+
+<script src="jquery.js"></script>
+<script src="other.js"></script>
+<script>
+    jQuery(function() {
+        jQuery('div').hide();
+    });
+</script>
+
+使用Ajax
+    Ajax是一種在無需重新加載整個網頁的情況下，能夠更新部分網頁的技術。
+    原生的Ajax
+    基於jQuery的Ajax
+        加載內容
+       提交表單

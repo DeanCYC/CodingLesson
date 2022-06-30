@@ -1,0 +1,201 @@
+實用程序
+文件和文件夾操作
+    1.創建/刪除空目錄 - mkdir / rmdir。
+    [root ~]# mkdir abc
+    [root ~]# mkdir -p xyz/abc
+    [root ~]# rmdir abc
+
+    2.創建/刪除文件 - touch / rm。
+    [root ~]# touch readme.txt
+    [root ~]# touch error.txt
+    [root ~]# rm error.txt
+    rm: remove regular empty file ‘error.txt’? y
+    [root ~]# rm -rf xyz
+    
+    - touch命令用於創建空白文件或修改文件時間。在Linux系統中一個文件有三種時間：
+        更改內容的時間 - mtime。
+        更改權限的時間 - ctime。
+        最後訪問時間 - atime。
+    - rm的幾個重要參數：
+        -i：交互式刪除，每個刪除項都會進行詢問。
+        -r：刪除目錄並遞歸的刪除目錄中的文件和目錄。
+        -f：強制刪除，忽略不存在的文件，沒有任何提示。
+
+    3.切換和查看當前工作目錄 - cd / pwd。
+    #說明：cd命令後面可以跟相對路徑（以當前路徑作為參照）或絕對路徑（以/開頭）來切換到指定的目錄，也可以用cd ..來返回上一級目錄。請大家想一想，如果要返回到上上一級目錄應該給cd命令加上什麼樣的參數呢？
+
+    4.查看目錄內容 - ls。
+    -l：以長格式查看文件和目錄。
+    -a：顯示以點開頭的文件和目錄（隱藏文件）。
+    -R：遇到目錄要進行遞歸展開（繼續列出目錄下面的文件和目錄）。
+    -d：只列出目錄，不列出其他內容。
+    -S / -t：按大小/時間排序。
+    
+    5.查看文件內容 - cat / tac / head / tail / more / less / rev / od。
+    [root ~]# wget http://www.sohu.com/ -O sohu.html
+    --2018-06-20 18:42:34--  http://www.sohu.com/
+    Resolving www.sohu.com (www.sohu.com)... 14.18.240.6
+    Connecting to www.sohu.com (www.sohu.com)|14.18.240.6|:80... connected.
+    HTTP request sent, awaiting response... 200 OK
+    Length: 212527 (208K) [text/html]
+    Saving to: ‘sohu.html’
+    100%[==================================================>] 212,527     --.-K/s   in 0.03s
+    2018-06-20 18:42:34 (7.48 MB/s) - ‘sohu.html’ saved [212527/212527]
+    [root ~]# cat sohu.html
+    ...
+    [root ~]# head -10 sohu.html
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <title>搜狐</title>
+    <meta name="Keywords" content="搜狐,門戶網站,新媒體,網絡媒體,新聞,財經,體育,娛樂,時尚,汽車,房產,科技,圖片,論壇,微博,博客,視頻,電影,電視劇"/>
+    <meta name="Description" content="搜狐網為用戶提供24小時不間斷的最新資訊，及搜索、郵件等網絡服務。內容包括全球熱點事件、突發新聞、時事評論、熱播影視劇、體育賽事、行業動態、生活服務信息，以及論壇、博客、微博、我的搜狐等互動空間。" />
+    <meta name="shenma-site-verification" content="1237e4d02a3d8d73e96cbd97b699e9c3_1504254750">
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1"/>
+    [root ~]# tail -2 sohu.html
+    </body>
+    </html>
+    [root ~]# less sohu.html
+    ...
+    [root ~]# cat -n sohu.html | more
+    ...
+    #說明：上面用到了一個名為wget的命令，它是一個網絡下載器程序，可以從指定的URL下載資源。
+
+    6.拷貝/移動文件 - cp / mv。
+    [root ~]# mkdir backup
+    [root ~]# cp sohu.html backup/
+    [root ~]# cd backup
+    [root backup]# ls
+    sohu.html
+    [root backup]# mv sohu.html sohu_index.html
+    [root backup]# ls
+    sohu_index.html
+
+    7.文件重命名 - rename。
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# rename .htm .html *.htm
+
+    8.查找文件和查找內容 - find / grep。
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# find / -name "*.html"
+    /root/sohu.html
+    /root/backup/sohu_index.html
+    [root@izwz97tbgo9lkabnat2lo8z ~]# find . -atime 7 -type f -print
+    [root@izwz97tbgo9lkabnat2lo8z ~]# find . -type f -size +2k
+    [root@izwz97tbgo9lkabnat2lo8z ~]# find . -type f -name "*.swp" -delete
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# grep "<script>" sohu.html -n
+    20:<script>
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# grep -E \<\/?script.*\> sohu.html -n
+    20:<script>
+    22:</script>
+    24:<script src="//statics.itc.cn/web/v3/static/js/es5-shim-08e41cfc3e.min.js"></script>
+    25:<script src="//statics.itc.cn/web/v3/static/js/es5-sham-1d5fa1124b.min.js"></script>
+    26:<script src="//statics.itc.cn/web/v3/static/js/html5shiv-21fc8c2ba6.js"></script>
+    29:<script type="text/javascript">
+    52:</script>
+    ...
+    #說明：grep在搜索字符串時可以使用正則表達式，如果需要使用正則表達式可以用grep -E或者直接使用egrep。
+
+    9.創建鏈接和查看鏈接 - ln / readlink。
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# ls -l sohu.html
+    -rw-r--r-- 1 root root 212131 Jun 20 19:15 sohu.html
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# ln /root/sohu.html /root/backup/sohu_backup
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# ls -l sohu.html
+    -rw-r--r-- 2 root root 212131 Jun 20 19:15 sohu.html
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# ln /root/sohu.html /root/backup/sohu_backup2
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# ls -l sohu.html
+    -rw-r--r-- 3 root root 212131 Jun 20 19:15 sohu.html
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# ln -s /etc/centos-release sysinfo
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# ls -l sysinfo
+    lrwxrwxrwx 1 root root 19 Jun 20 19:21 sysinfo -> /etc/centos-release
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# cat sysinfo
+    CentOS Linux release 7.4.1708 (Core)
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# cat /etc/centos-release
+    CentOS Linux release 7.4.1708 (Core)
+    #說明：鏈接可以分為硬鏈接和軟鏈接（符號鏈接）。硬鏈接可以認為是一個指向文件數據的指針，就像Python中對象的引用計數，每添加一個硬鏈接，文件的對應鏈接數就增加1，只有當文件的鏈接數為0時，文件所對應的存儲空間才有可能被其他文件覆蓋。我們平常刪除文件時其實並沒有刪除硬盤上的數據，我們刪除的只是一個指針，或者說是數據的一條使用記錄，所以類似於“文件粉碎機”之類的軟件在“粉碎”文件時除了刪除文件指針，還會在文件對應的存儲區域填入數據來保證文件無法再恢復。軟鏈接類似於Windows系統下的快捷方式，當軟鏈接鏈接的文件被刪除時，軟鏈接也就失效了。
+
+    10.壓縮/解壓縮和歸檔/解歸檔 - gzip / gunzip / xz。
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# wget http://download.redis.io/releases/redis-4.0.10.tar.gz
+    --2018-06-20 19:29:59--  http://download.redis.io/releases/redis-4.0.10.tar.gz
+    Resolving download.redis.io (download.redis.io)... 109.74.203.151
+    Connecting to download.redis.io (download.redis.io)|109.74.203.151|:80... connected.
+    HTTP request sent, awaiting response... 200 OK
+    Length: 1738465 (1.7M) [application/x-gzip]
+    Saving to: ‘redis-4.0.10.tar.gz’
+    100%[==================================================>] 1,738,465   70.1KB/s   in 74s
+    2018-06-20 19:31:14 (22.9 KB/s) - ‘redis-4.0.10.tar.gz’ saved [1738465/1738465]
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# ls redis*
+    redis-4.0.10.tar.gz
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# gunzip redis-4.0.10.tar.gz
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]#
+    11.歸檔和解歸檔 - tar。
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# tar -xvf redis-4.0.10.tar
+    redis-4.0.10/
+    redis-4.0.10/.gitignore
+    redis-4.0.10/00-RELEASENOTES
+    redis-4.0.10/BUGS
+    redis-4.0.10/CONTRIBUTING
+    redis-4.0.10/COPYING
+    redis-4.0.10/INSTALL
+    redis-4.0.10/MANIFESTO
+    redis-4.0.10/Makefile
+    redis-4.0.10/README.md
+    redis-4.0.10/deps/
+    redis-4.0.10/deps/Makefile
+    redis-4.0.10/deps/README.md
+    ...
+    #說明：歸檔（也稱為創建歸檔）和解歸檔都使用tar命令，通常創建歸檔需要-cvf三個參數，其中c表示創建（create），v表示顯示創建歸檔詳情（verbose），f表示指定歸檔的文件（file）；解歸檔需要加上-xvf參數，其中x表示抽取（extract），其他兩個參數跟創建歸檔相同。
+
+    12.將標準輸入轉成命令行參數 - xargs。
+    下面的命令會將查找當前路徑下的html文件，然後通過xargs將這些文件作為參數傳給rm命令，實現查找並刪除文件的操作。
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# find . -type f -name "*.html" | xargs rm -f
+    下面的命令將a.txt文件中的多行內容變成一行輸出到b.txt文件中，其中<表示從a.txt中讀取輸入，>表示將命令的執行結果輸出到b.txt中。
+    [root@iZwz97tbgo9lkabnat2lo8Z ~]# xargs < a.txt > b.txt
+    #說明：這個命令就像上面演示的那樣常在管道（實現進程間通信的一種方式）和重定向（重新指定輸入輸出的位置）操作中用到，後面的內容中會講到管道操作和輸入輸出重定向操作。
+
+    13.顯示文件或目錄 - basename / dirname。
+
+    14.其他相關工具。
+    sort - 對內容排序
+    uniq - 去掉相鄰重複內容
+    tr - 替換指定內容為新內容
+    cut / paste - 剪切/黏貼內容
+    split - 拆分文件
+    file - 判斷文件類型
+    wc - 統計文件行數、單詞數、字節數
+    iconv - 編碼轉換
+
+    [root ~]# cat foo.txt
+    grape
+    apple
+    pitaya
+    [root ~]# cat bar.txt
+    100
+    200
+    300
+    400
+    [root ~]# paste foo.txt bar.txt
+    grape   100
+    apple   200
+    pitaya  300
+            400
+    [root ~]# paste foo.txt bar.txt > hello.txt
+    [root ~]# cut -b 4-8 hello.txt
+    pe      10
+    le      20
+    aya     3
+    0
+    [root ~]# cat hello.txt | tr '\t' ','
+    grape,100
+    apple,200
+    pitaya,300
+    ,400
+    [root ~]# split -l 100 sohu.html hello
+    [root ~]# wget https://www.baidu.com/img/bd_logo1.png
+    [root ~]# file bd_logo1.png
+    bd_logo1.png: PNG image data, 540 x 258, 8-bit colormap, non-interlaced
+    [root ~]# wc sohu.html
+    2979   6355 212527 sohu.html
+    [root ~]# wc -l sohu.html
+    2979 sohu.html
+    [root ~]# wget http://www.qq.com -O qq.html
+    [root ~]# iconv -f gb2312 -t utf-8 qq.html
