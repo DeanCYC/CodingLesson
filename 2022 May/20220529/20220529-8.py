@@ -23,4 +23,4 @@ for elem in list1:
 for index, elem in enumerate(list1):
     print(index, elem)
     
-#待解
+#待解 Pending
