@@ -1,0 +1,213 @@
+SQL 和 MySQL 詳解
+SQL 詳解
+我們通常可以將 SQL 分為四類，分別是 DDL（數據定義語言）、DML（數據操作語言）、DQL（數據查詢語言）和 DCL（數據控制語言）。 DDL 主要用於創建、刪除、修改數據庫中的對象，比如創建、刪除和修改二維表，核心的關鍵字包括create、drop和alter；DML 主要負責數據的插入、刪除和更新，關鍵詞包括insert、delete和update；DQL 負責數據查詢，最重要的一個關鍵詞是select；DCL 通常用於授予和召回權限，核心關鍵詞是grant和revoke。
+#說明：SQL 是不區分大小寫的語言，為了書寫和識別方便，下面的 SQL 都使用了小寫字母來書寫。
+
+DDL（數據定義語言）
+下面我們來實現一個選課系統的數據庫，如下所示的 SQL 創建了名為school的數據庫和五張表，分別是學院表（tb_college）、學生表（tb_student）、教師表（tb_teacher）、課程表（tb_course）和選課記錄表（tb_record），其中學生和教師跟學院之間是多對一關係，課程跟老師之間也是多對一關係，學生和課程是多對多關係，選課記錄表就是維持學生跟課程多對多關係的中間表。
+    ``-- 如果存在名為school的數據庫就刪除它
+    drop database if exists `school`;
+
+    -- 創建名為school的數據庫並設置默認的字符集和排序方式
+    create database `school` default character set utf8mb4 collate utf8mb4_general_ci;
+
+    -- 切換到school數據庫上下文環境
+    use `school`;
+
+    -- 創建學院表
+    create table `tb_college`
+    (
+    `col_id` int unsigned auto_increment comment '編號',
+    `col_name` varchar(50) not null comment '名稱',
+    `col_intro` varchar(500) default '' comment '介紹',
+    primary key (`col_id`)
+    ) engine=innodb auto_increment=1 comment '學院表';
+
+    -- 創建學生表
+    create table `tb_student`
+    (
+    `stu_id` int unsigned not null comment '學號',
+    `stu_name` varchar(20) not null comment '姓名',
+    `stu_sex` boolean default 1 not null comment '性別',
+    `stu_birth` date not null comment '出生日期',
+    `stu_addr` varchar(255) default '' comment '籍貫',
+    `col_id` int unsigned not null comment '所屬學院',
+    primary key (`stu_id`),
+    constraint `fk_student_col_id` foreign key (`col_id`) references `tb_college` (`col_id`)
+    ) engine=innodb comment '學生表';
+
+    -- 創建教師表
+    create table `tb_teacher`
+    (
+    `tea_id` int unsigned not null comment '工號',
+    `tea_name` varchar(20) not null comment '姓名',
+    `tea_title` varchar(10) default '助教' comment '職稱',
+    `col_id` int unsigned not null comment '所屬學院',
+    primary key (`tea_id`),
+    constraint `fk_teacher_col_id` foreign key (`col_id`) references `tb_college` (`col_id`)
+    ) engine=innodb comment '老師表';
+
+    -- 創建課程表
+    create table `tb_course`
+    (
+    `cou_id` int unsigned not null comment '編號',
+    `cou_name` varchar(50) not null comment '名稱',
+    `cou_credit` int not null comment '學分',
+    `tea_id` int unsigned not null comment '授課老師',
+    primary key (`cou_id`),
+    constraint `fk_course_tea_id` foreign key (`tea_id`) references `tb_teacher` (`tea_id`)
+    ) engine=innodb comment '課程表';
+
+    -- 創建選課記錄表
+    create table `tb_record`
+    (
+    `rec_id` bigint unsigned auto_increment comment '選課記錄號',
+    `stu_id` int unsigned not null comment '學號',
+    `cou_id` int unsigned not null comment '課程編號',
+    `sel_date` date not null comment '選課日期',
+    `score` decimal(4,1) comment '考試成績',
+    primary key (`rec_id`),
+    constraint `fk_record_stu_id` foreign key (`stu_id`) references `tb_student` (`stu_id`),
+    constraint `fk_record_cou_id` foreign key (`cou_id`) references `tb_course` (`cou_id`),
+    constraint `uk_record_stu_cou` unique (`stu_id`, `cou_id`)
+    ) engine=innodb comment '選課記錄表';
+
+上面的DDL有幾個地方需要強調一下：
+    創建數據庫時，我們通過default character set utf8mb4指定了數據庫默認使用的字符集為utf8mb4（最大4字節的utf-8編碼），我們推薦使用該字符集，它也是 MySQL 8.x 默認使用的字符集，因為它能夠支持國際化編碼，還可以存儲 Emoji 字符。可以通過下面的命令查看 MySQL 支持的字符集以及默認的排序規則。
+    show character set;
+    +----------+---------------------------------+---------------------+--------+
+    | Charset  | Description                     | Default collation   | Maxlen |
+    +----------+---------------------------------+---------------------+--------+
+    | big5     | Big5 Traditional Chinese        | big5_chinese_ci     |      2 |
+    | dec8     | DEC West European               | dec8_swedish_ci     |      1 |
+    | cp850    | DOS West European               | cp850_general_ci    |      1 |
+    | hp8      | HP West European                | hp8_english_ci      |      1 |
+    | koi8r    | KOI8-R Relcom Russian           | koi8r_general_ci    |      1 |
+    | latin1   | cp1252 West European            | latin1_swedish_ci   |      1 |
+    | latin2   | ISO 8859-2 Central European     | latin2_general_ci   |      1 |
+    | swe7     | 7bit Swedish                    | swe7_swedish_ci     |      1 |
+    | ascii    | US ASCII                        | ascii_general_ci    |      1 |
+    | ujis     | EUC-JP Japanese                 | ujis_japanese_ci    |      3 |
+    | sjis     | Shift-JIS Japanese              | sjis_japanese_ci    |      2 |
+    | hebrew   | ISO 8859-8 Hebrew               | hebrew_general_ci   |      1 |
+    | tis620   | TIS620 Thai                     | tis620_thai_ci      |      1 |
+    | euckr    | EUC-KR Korean                   | euckr_korean_ci     |      2 |
+    | koi8u    | KOI8-U Ukrainian                | koi8u_general_ci    |      1 |
+    | gb2312   | GB2312 Simplified Chinese       | gb2312_chinese_ci   |      2 |
+    | greek    | ISO 8859-7 Greek                | greek_general_ci    |      1 |
+    | cp1250   | Windows Central European        | cp1250_general_ci   |      1 |
+    | gbk      | GBK Simplified Chinese          | gbk_chinese_ci      |      2 |
+    | latin5   | ISO 8859-9 Turkish              | latin5_turkish_ci   |      1 |
+    | armscii8 | ARMSCII-8 Armenian              | armscii8_general_ci |      1 |
+    | utf8     | UTF-8 Unicode                   | utf8_general_ci     |      3 |
+    | ucs2     | UCS-2 Unicode                   | ucs2_general_ci     |      2 |
+    | cp866    | DOS Russian                     | cp866_general_ci    |      1 |
+    | keybcs2  | DOS Kamenicky Czech-Slovak      | keybcs2_general_ci  |      1 |
+    | macce    | Mac Central European            | macce_general_ci    |      1 |
+    | macroman | Mac West European               | macroman_general_ci |      1 |
+    | cp852    | DOS Central European            | cp852_general_ci    |      1 |
+    | latin7   | ISO 8859-13 Baltic              | latin7_general_ci   |      1 |
+    | utf8mb4  | UTF-8 Unicode                   | utf8mb4_general_ci  |      4 |
+    | cp1251   | Windows Cyrillic                | cp1251_general_ci   |      1 |
+    | utf16    | UTF-16 Unicode                  | utf16_general_ci    |      4 |
+    | utf16le  | UTF-16LE Unicode                | utf16le_general_ci  |      4 |
+    | cp1256   | Windows Arabic                  | cp1256_general_ci   |      1 |
+    | cp1257   | Windows Baltic                  | cp1257_general_ci   |      1 |
+    | utf32    | UTF-32 Unicode                  | utf32_general_ci    |      4 |
+    | binary   | Binary pseudo charset           | binary              |      1 |
+    | geostd8  | GEOSTD8 Georgian                | geostd8_general_ci  |      1 |
+    | cp932    | SJIS for Windows Japanese       | cp932_japanese_ci   |      2 |
+    | eucjpms  | UJIS for Windows Japanese       | eucjpms_japanese_ci |      3 |
+    | gb18030  | China National Standard GB18030 | gb18030_chinese_ci  |      4 |
+    +----------+---------------------------------+---------------------+--------+
+    41 rows in set (0.00 sec)
+
+如果要設置 MySQL 服務啟動時默認使用的字符集，可以修改MySQL的配置並添加以下內容。
+    [mysqld]
+    character-set-server=utf8
+
+在創建表的時候，可以自行選擇底層的存儲引擎。 MySQL 支持多種存儲引擎，可以通過show engines命令進行查看。 MySQL 5.5 以後的版本默認使用的存儲引擎是 InnoDB，它是我們推薦大家使用的存儲引擎（因為更適合當下互聯網應用對高並發、性能以及事務支持等方面的需求），為了 SQL 語句的向下兼容性，我們可以在建表語句結束處右圓括號的後面通過engine=innodb來指定使用 InnoDB 存儲引擎。
+
+show engines\G
+*************************** 1. row ***************************
+      Engine: InnoDB
+     Support: DEFAULT
+     Comment: Supports transactions, row-level locking, and foreign keys
+Transactions: YES
+          XA: YES
+  Savepoints: YES
+*************************** 2. row ***************************
+      Engine: MRG_MYISAM
+     Support: YES
+     Comment: Collection of identical MyISAM tables
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 3. row ***************************
+      Engine: MEMORY
+     Support: YES
+     Comment: Hash based, stored in memory, useful for temporary tables
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 4. row ***************************
+      Engine: BLACKHOLE
+     Support: YES
+     Comment: /dev/null storage engine (anything you write to it disappears)
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 5. row ***************************
+      Engine: MyISAM
+     Support: YES
+     Comment: MyISAM storage engine
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 6. row ***************************
+      Engine: CSV
+     Support: YES
+     Comment: CSV storage engine
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 7. row ***************************
+      Engine: ARCHIVE
+     Support: YES
+     Comment: Archive storage engine
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 8. row ***************************
+      Engine: PERFORMANCE_SCHEMA
+     Support: YES
+     Comment: Performance Schema
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 9. row ***************************
+      Engine: FEDERATED
+     Support: NO
+     Comment: Federated MySQL storage engine
+Transactions: NULL
+          XA: NULL
+  Savepoints: NULL
+9 rows in set (0.00 sec)
+下面的表格對MySQL幾種常用的數據引擎進行了簡單的對比。
+
+特性	InnoDB	MRG_MYISAM	MEMORY	MyISAM
+存儲限制	有	沒有	有	有
+事務	支持			
+鎖機制	行鎖	表鎖	表鎖	表鎖
+B樹索引	支持	支持	支持	支持
+哈希索引			支持	
+全文檢索	支持（5.6+）			支持
+集群索引	支持			
+數據緩存	支持		支持	
+索引緩存	支持	支持	支持	支持
+數據可壓縮				支持
+內存使用	高	低	中	低
+存儲空間使用	高	低		低
+批量插入性能	低	高	高	高
+是否支持外鍵	支持			
+通過上面的比較我們可以了解到，InnoDB 是唯一能夠支持外鍵、事務以及行鎖的存儲引擎，所以我們之前說它更適合互聯網應用，而且在較新版本的 MySQL 中，它也是默認使用的存儲引擎。
