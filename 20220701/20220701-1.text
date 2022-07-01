@@ -128,86 +128,165 @@ DDL（數據定義語言）
 
 在創建表的時候，可以自行選擇底層的存儲引擎。 MySQL 支持多種存儲引擎，可以通過show engines命令進行查看。 MySQL 5.5 以後的版本默認使用的存儲引擎是 InnoDB，它是我們推薦大家使用的存儲引擎（因為更適合當下互聯網應用對高並發、性能以及事務支持等方面的需求），為了 SQL 語句的向下兼容性，我們可以在建表語句結束處右圓括號的後面通過engine=innodb來指定使用 InnoDB 存儲引擎。
 
-show engines\G
-*************************** 1. row ***************************
-      Engine: InnoDB
-     Support: DEFAULT
-     Comment: Supports transactions, row-level locking, and foreign keys
-Transactions: YES
-          XA: YES
-  Savepoints: YES
-*************************** 2. row ***************************
-      Engine: MRG_MYISAM
-     Support: YES
-     Comment: Collection of identical MyISAM tables
-Transactions: NO
-          XA: NO
-  Savepoints: NO
-*************************** 3. row ***************************
-      Engine: MEMORY
-     Support: YES
-     Comment: Hash based, stored in memory, useful for temporary tables
-Transactions: NO
-          XA: NO
-  Savepoints: NO
-*************************** 4. row ***************************
-      Engine: BLACKHOLE
-     Support: YES
-     Comment: /dev/null storage engine (anything you write to it disappears)
-Transactions: NO
-          XA: NO
-  Savepoints: NO
-*************************** 5. row ***************************
-      Engine: MyISAM
-     Support: YES
-     Comment: MyISAM storage engine
-Transactions: NO
-          XA: NO
-  Savepoints: NO
-*************************** 6. row ***************************
-      Engine: CSV
-     Support: YES
-     Comment: CSV storage engine
-Transactions: NO
-          XA: NO
-  Savepoints: NO
-*************************** 7. row ***************************
-      Engine: ARCHIVE
-     Support: YES
-     Comment: Archive storage engine
-Transactions: NO
-          XA: NO
-  Savepoints: NO
-*************************** 8. row ***************************
-      Engine: PERFORMANCE_SCHEMA
-     Support: YES
-     Comment: Performance Schema
-Transactions: NO
-          XA: NO
-  Savepoints: NO
-*************************** 9. row ***************************
-      Engine: FEDERATED
-     Support: NO
-     Comment: Federated MySQL storage engine
-Transactions: NULL
-          XA: NULL
-  Savepoints: NULL
-9 rows in set (0.00 sec)
-下面的表格對MySQL幾種常用的數據引擎進行了簡單的對比。
+    show engines\G
 
-特性	InnoDB	MRG_MYISAM	MEMORY	MyISAM
-存儲限制	有	沒有	有	有
-事務	支持			
-鎖機制	行鎖	表鎖	表鎖	表鎖
-B樹索引	支持	支持	支持	支持
-哈希索引			支持	
-全文檢索	支持（5.6+）			支持
-集群索引	支持			
-數據緩存	支持		支持	
-索引緩存	支持	支持	支持	支持
-數據可壓縮				支持
-內存使用	高	低	中	低
-存儲空間使用	高	低		低
-批量插入性能	低	高	高	高
-是否支持外鍵	支持			
+    `*************************** 1. row ***************************
+        Engine: InnoDB
+        Support: DEFAULT
+        Comment: Supports transactions, row-level locking, and foreign keys
+    Transactions: YES
+            XA: YES
+    Savepoints: YES
+    *************************** 2. row ***************************
+        Engine: MRG_MYISAM
+        Support: YES
+        Comment: Collection of identical MyISAM tables
+    Transactions: NO
+            XA: NO
+    Savepoints: NO
+    *************************** 3. row ***************************
+        Engine: MEMORY
+        Support: YES
+        Comment: Hash based, stored in memory, useful for temporary tables
+    Transactions: NO
+            XA: NO
+    Savepoints: NO
+    *************************** 4. row ***************************
+        Engine: BLACKHOLE
+        Support: YES
+        Comment: /dev/null storage engine (anything you write to it disappears)
+    Transactions: NO
+            XA: NO
+    Savepoints: NO
+    *************************** 5. row ***************************
+        Engine: MyISAM
+        Support: YES
+        Comment: MyISAM storage engine
+    Transactions: NO
+            XA: NO
+    Savepoints: NO
+    *************************** 6. row ***************************
+        Engine: CSV
+        Support: YES
+        Comment: CSV storage engine
+    Transactions: NO
+            XA: NO
+    Savepoints: NO
+    *************************** 7. row ***************************
+        Engine: ARCHIVE
+        Support: YES
+        Comment: Archive storage engine
+    Transactions: NO
+            XA: NO
+    Savepoints: NO
+    *************************** 8. row ***************************
+        Engine: PERFORMANCE_SCHEMA
+        Support: YES
+        Comment: Performance Schema
+    Transactions: NO
+            XA: NO
+    Savepoints: NO
+    *************************** 9. row ***************************
+        Engine: FEDERATED
+        Support: NO
+        Comment: Federated MySQL storage engine
+    Transactions: NULL
+            XA: NULL
+    Savepoints: NULL
+    9 rows in set (0.00 sec)
+
+下面的表格對MySQL幾種常用的數據引擎進行了簡單的對比。
+    特性        InnoDB  MRG_MYISAM      MEMORY      MyISAM
+    存儲限制       有       沒有            有           有
+    事務          支持			
+    鎖機制        行鎖      表鎖           表鎖          表鎖
+    B樹索引       支持      支持           支持          支持
+    哈希索引		                      支持	
+    全文檢索      支持（5.6+）                           支持
+    集群索引      支持			
+    數據緩存      支持                    支持	
+    索引緩存      支持      支持           支持          支持
+    數據可壓縮                                          支持
+    內存使用       高        低            中            低
+    存儲空間使用    高        低                         低
+    批量插入性能    低        高            高            高
+    是否支持外鍵   支持			
 通過上面的比較我們可以了解到，InnoDB 是唯一能夠支持外鍵、事務以及行鎖的存儲引擎，所以我們之前說它更適合互聯網應用，而且在較新版本的 MySQL 中，它也是默認使用的存儲引擎。
+
+在定義表結構為每個字段選擇數據類型時，如果不清楚哪個數據類型更合適，可以通過 MySQL 的幫助系統來了解每種數據類型的特性、數據的長度和精度等相關信息。
+    ? data types
+
+    You asked for help about help category: "Data Types"
+    For more information, type 'help <item>', where <item> is one of the following
+    topics:
+    AUTO_INCREMENT
+    BIGINT
+    BINARY
+    BIT
+    BLOB
+    BLOB DATA TYPE
+    BOOLEAN
+    CHAR
+    CHAR BYTE
+    DATE
+    DATETIME
+    DEC
+    DECIMAL
+    DOUBLE
+    DOUBLE PRECISION
+    ENUM
+    FLOAT
+    INT
+    INTEGER
+    LONGBLOB
+    LONGTEXT
+    MEDIUMBLOB
+    MEDIUMINT
+    MEDIUMTEXT
+    SET DATA TYPE
+    SMALLINT
+    TEXT
+    TIME
+    TIMESTAMP
+    TINYBLOB
+    TINYINT
+    TINYTEXT
+    VARBINARY
+    VARCHAR
+    YEAR DATA TYPE
+    
+    ? varchar
+
+    Name: 'VARCHAR'
+    Description:
+    [NATIONAL] VARCHAR(M) [CHARACTER SET charset_name] [COLLATE
+    collation_name]
+
+    A variable-length string. M represents the maximum column length in
+    characters. The range of M is 0 to 65,535. The effective maximum length
+    of a VARCHAR is subject to the maximum row size (65,535 bytes, which is
+    shared among all columns) and the character set used. For example, utf8
+    characters can require up to three bytes per character, so a VARCHAR
+    column that uses the utf8 character set can be declared to be a maximum
+    of 21,844 characters. See
+    http://dev.mysql.com/doc/refman/5.7/en/column-count-limit.html.
+
+    MySQL stores VARCHAR values as a 1-byte or 2-byte length prefix plus
+    data. The length prefix indicates the number of bytes in the value. A
+    VARCHAR column uses one length byte if values require no more than 255
+    bytes, two length bytes if values may require more than 255 bytes.
+
+    *Note*:
+
+    MySQL follows the standard SQL specification, and does not remove
+    trailing spaces from VARCHAR values.
+
+    VARCHAR is shorthand for CHARACTER VARYING. NATIONAL VARCHAR is the
+    standard SQL way to define that a VARCHAR column should use some
+    predefined character set. MySQL uses utf8 as this predefined character
+    set. http://dev.mysql.com/doc/refman/5.7/en/charset-national.html.
+    NVARCHAR is shorthand for NATIONAL VARCHAR.
+
+    URL: http://dev.mysql.com/doc/refman/5.7/en/string-type-overview.html
+
+在數據類型的選擇上，保存字符串數據通常都使用VARCHAR和CHAR兩種類型，前者通常稱為變長字符串，而後者通常稱為定長字符串；對於 InnoDB 存儲引擎，行存儲格式沒有區分固定長度和可變長度列，因此VARCHAR類型和CHAR類型沒有本質區別，後者不一定比前者性能更好。如果要保存的很大字符串，可以使用TEXT類型；如果要保存很大的字節串，可以使用BLOB（二進制大對象）類型。在 MySQL 中，TEXT和BLOB又分別包括TEXT、MEDIUMTEXT、LONGTEXT和BLOB、MEDIUMBLOB、LONGBLOB三種不同的類型，它們主要的區別在於存儲數據的最大大小不同。保存浮點數可以用FLOAT或DOUBLE類型，FLOAT已經不推薦使用了，而且在 MySQL 後續的版本中可能會被移除掉。而保存定點數應該使用DECIMAL類型。如果要保存時間日期，DATETIME類型優於TIMESTAMP類型，因為前者能表示的時間日期範圍更大。
