@@ -1,0 +1,366 @@
+DQL（數據查詢語言）
+接下來，我們完成如下所示的查詢。
+
+    -- 查詢所有學生的所有信息
+    select * from `tb_student`;
+
+    -- 查詢學生的學號、姓名和籍貫(投影)
+    select `stu_id`, `stu_name`, `stu_addr` from `tb_student`;
+
+    -- 查詢所有課程的名稱及學分(投影和別名)
+    select `cou_name` as 課程名稱, `cou_credit` as 學分 from `tb_course`;
+
+    -- 查詢所有女學生的姓名和出生日期(篩選)
+    select `stu_name`, `stu_birth` from `tb_student` where `stu_sex`=0;
+
+    -- 查詢籍貫為“四川成都”的女學生的姓名和出生日期(篩選)
+    select `stu_name`, `stu_birth` from `tb_student` where `stu_sex`=0 and `stu_addr`='四川成都';
+
+    -- 查詢籍貫為“四川成都”或者性別為“女生”的學生
+    select `stu_name`, `stu_birth` from `tb_student` where `stu_sex`=0 or `stu_addr`='四川成都';
+
+    -- 查詢所有80後學生的姓名、性別和出生日期(篩選)
+    select `stu_name`, `stu_sex`, `stu_birth` from `tb_student` 
+    where `stu_birth`>='1980-1-1' and `stu_birth`<='1989-12-31';
+
+    select `stu_name`, `stu_sex`, `stu_birth` from `tb_student` 
+    where `stu_birth` between '1980-1-1' and '1989-12-31';
+
+    -- 補充：將表示性別的 1 和 0 處理成 “男” 和 “女”
+    select 
+        `stu_name` as 姓名, 
+        if(`stu_sex`, '男', '女') as 性別, 
+        `stu_birth` as 出生日期
+    from `tb_student` 
+    where `stu_birth` between '1980-1-1' and '1989-12-31';
+
+    select 
+        `stu_name` as 姓名, 
+        case `stu_sex` when 1 then '男' else '女' end as 性別, 
+        `stu_birth` as 出生日期
+    from `tb_student` 
+    where `stu_birth` between '1980-1-1' and '1989-12-31';
+
+    -- 查詢學分大於2的課程的名稱和學分(篩選)
+    select `cou_name`, `cou_credit` from `tb_course` where `cou_credit`>2;
+
+    -- 查詢學分是奇數的課程的名稱和學分(篩選)
+    select `cou_name`, `cou_credit` from `tb_course` where `cou_credit`%2<>0;
+
+    select `cou_name`, `cou_credit` from `tb_course` where `cou_credit` mod 2<>0;
+
+    -- 查詢選擇選了1111的課程考試成績在90分以上的學生學號(篩選)
+    select `stu_id` from `tb_record` where `cou_id`=1111 and `score`>90;
+
+    -- 查詢名字叫“楊過”的學生的姓名和性別
+    select `stu_name`, `stu_sex` from `tb_student` where `stu_name`='楊過';
+        
+    -- 查詢姓“楊”的學生姓名和性別(模糊)
+    -- % - 通配符（wildcard），它可以匹配0個或任意多個字符
+    select `stu_name`, `stu_sex` from `tb_student` where `stu_name` like '楊%';
+
+    -- 查詢姓“楊”名字兩個字的學生姓名和性別(模糊)
+    -- _ - 通配符（wildcard），它可以精確匹配一個字符
+    select `stu_name`, `stu_sex` from `tb_student` where `stu_name` like '楊_';
+
+    -- 查詢姓“楊”名字三個字的學生姓名和性別(模糊)
+    select `stu_name`, `stu_sex` from `tb_student` where `stu_name` like '楊__';
+
+    -- 查詢名字中有“不”字或“嫣”字的學生的姓名(模糊)
+    select `stu_name` from `tb_student` where `stu_name` like '%不%' or `stu_name` like '%嫣%';
+
+    -- 將“岳不群”改名為“岳不嫣”，比較下面兩個查詢的區別
+    update `tb_student` set `stu_name`='岳不嫣' where `stu_id`=1572;
+
+    select `stu_name` from `tb_student` where `stu_name` like '%不%'
+    union 
+    select `stu_name` from `tb_student` where `stu_name` like '%嫣%';
+
+    select `stu_name` from `tb_student` where `stu_name` like '%不%'
+    union all 
+    select `stu_name` from `tb_student` where `stu_name` like '%嫣%';
+
+    -- 查詢姓“楊”或姓“林”名字三個字的學生的姓名(正則表達式模糊查詢)
+    select `stu_name` from `tb_student` where `stu_name` regexp '[楊林].{2}';
+
+    -- 查詢沒有錄入籍貫的學生姓名(空值處理)
+    select `stu_name` from `tb_student` where `stu_addr` is null;
+
+    select `stu_name` from `tb_student` where `stu_addr` <=> null;
+
+    -- 查詢錄入了籍貫的學生姓名(空值處理)
+    select `stu_name` from `tb_student` where `stu_addr` is not null;
+
+    -- 下面的查詢什麼也查不到，三值邏輯 --> true / false / unknown
+    select `stu_name` from `tb_student` where `stu_addr`=null or `stu_addr`<>null;
+
+    -- 查詢學生選課的所有日期(去重)
+    select distinct `sel_date` from `tb_record`;
+
+    -- 查詢學生的籍貫(去重)
+    select distinct `stu_addr` from `tb_student` where `stu_addr` is not null;
+
+    -- 查詢男學生的姓名和生日按年齡從大到小排列(排序)
+    -- 升序：從小到大 - asc，降序：從大到小 - desc
+    select `stu_id`, `stu_name`, `stu_birth` from `tb_student` 
+    where `stu_sex`=1 order by `stu_birth` asc, `stu_id` desc;
+
+    -- 補充：將上面的生日換算成年齡(日期函數、數值函數)
+    select 
+        `stu_id` as 學號,
+        `stu_name` as 姓名, 
+        floor(datediff(curdate(), `stu_birth`)/365) as 年齡
+    from `tb_student` 
+    where `stu_sex`=1 order by 年齡 desc, `stu_id` desc;
+
+    -- 查詢年齡最大的學生的出生日期(聚合函數)
+    select min(`stu_birth`) from `tb_student`;
+
+    -- 查詢年齡最小的學生的出生日期(聚合函數)
+    select max(`stu_birth`) from `tb_student`;
+
+    -- 查詢編號為1111的課程考試成績的最高分(聚合函數)
+    select max(`score`) from `tb_record` where `cou_id`=1111;
+
+    -- 查詢學號為1001的學生考試成績的最低分(聚合函數)
+    select min(`score`) from `tb_record` where `stu_id`=1001;
+
+    -- 查詢學號為1001的學生考試成績的平均分(聚合函數)
+    select avg(`score`) from `tb_record` where `stu_id`=1001;
+
+    select sum(`score`) / count(`score`) from `tb_record` where `stu_id`=1001;
+
+    -- 查詢學號為1001的學生考試成績的平均分，如果有null值，null值算0分(聚合函數)
+    select sum(`score`) / count(*) from `tb_record` where `stu_id`=1001;
+
+    select avg(ifnull(`score`, 0)) from `tb_record` where `stu_id`=1001;
+
+    -- 查詢學號為1001的學生考試成績的標準差(聚合函數)
+    select std(`score`), variance(`score`) from `tb_record` where `stu_id`=1001;
+
+    -- 查詢男女學生的人數(分組和聚合函數)
+    select 
+        case `stu_sex` when 1 then '男' else '女' end as 性別,
+        count(*) as 人數
+    from `tb_student` group by `stu_sex`;
+
+    -- 查詢每個學院學生人數(分組和聚合函數)
+    select 
+        `col_id` as 學院,
+        count(*) as 人數
+    from `tb_student` group by `col_id` with rollup;
+
+    -- 查詢每個學院男女學生人數(分組和聚合函數)
+    select 
+        `col_id` as 學院,
+        if(`stu_sex`, '男', '女') as 性別,
+        count(*) as 人數
+    from `tb_student` group by `col_id`, `stu_sex`;
+
+    -- 查詢每個學生的學號和平均成績(分組和聚合函數)
+    select 
+        `stu_id`, 
+        round(avg(`score`), 1) as avg_score
+    from `tb_record` group by `stu_id`;
+
+    -- 查詢平均成績大於等於90分的學生的學號和平均成績
+    -- 分組以前的篩選使用where子句，分組以後的篩選使用having子句
+    select 
+        `stu_id`, 
+        round(avg(`score`), 1) as avg_score
+    from `tb_record`
+    group by `stu_id` having avg_score>=90;
+
+    -- 查詢1111、2222、3333三門課程平均成績大於等於90分的學生的學號和平均成績
+    select 
+        `stu_id`, 
+        round(avg(`score`), 1) as avg_score
+    from `tb_record` where `cou_id` in (1111, 2222, 3333)
+    group by `stu_id` having avg_score>=90;
+
+    -- 查詢年齡最大的學生的姓名(子查詢/嵌套查詢)
+    -- 嵌套查詢：把一個select的結果作為另一個select的一部分來使用
+    select `stu_name` from `tb_student` 
+    where `stu_birth`=(
+        select min(`stu_birth`) from `tb_student`
+    );
+
+    -- 查詢選了兩門以上的課程的學生姓名(子查詢/分組條件/集合運算)
+    select `stu_name` from `tb_student` 
+    where `stu_id` in (
+        select `stu_id` from `tb_record` 
+        group by `stu_id` having count(*)>2
+    );
+
+    -- 查詢學生的姓名、生日和所在學院名稱
+    select `stu_name`, `stu_birth`, `col_name` 
+    from `tb_student`, `tb_college` 
+    where `tb_student`.`col_id`=`tb_college`.`col_id`;
+
+    select `stu_name`, `stu_birth`, `col_name` 
+    from `tb_student` inner join `tb_college` 
+    on `tb_student`.`col_id`=`tb_college`.`col_id`;
+
+    select `stu_name`, `stu_birth`, `col_name` 
+    from `tb_student` natural join `tb_college`;
+
+    -- 查詢學生姓名、課程名稱以及成績(連接查詢/聯結查詢)
+    select `stu_name`, `cou_name`, `score` 
+    from `tb_student`, `tb_course`, `tb_record` 
+    where `tb_student`.`stu_id`=`tb_record`.`stu_id` 
+    and `tb_course`.`cou_id`=`tb_record`.`cou_id` 
+    and `score` is not null;
+
+    select `stu_name`, `cou_name`, `score` from `tb_student` 
+    inner join `tb_record` on `tb_student`.`stu_id`=`tb_record`.`stu_id` 
+    inner join `tb_course` on `tb_course`.`cou_id`=`tb_record`.`cou_id` 
+    where `score` is not null;
+
+    select `stu_name`, `cou_name`, `score` from `tb_student` 
+    natural join `tb_record` 
+    natural join `tb_course`
+    where `score` is not null;
+
+    -- 補充：上面的查詢結果取前5條數據(分頁查詢)
+    select `stu_name`, `cou_name`, `score` 
+    from `tb_student`, `tb_course`, `tb_record` 
+    where `tb_student`.`stu_id`=`tb_record`.`stu_id` 
+    and `tb_course`.`cou_id`=`tb_record`.`cou_id` 
+    and `score` is not null 
+    order by `score` desc 
+    limit 0,5;
+
+    -- 補充：上面的查詢結果取第6-10條數據(分頁查詢)
+    select `stu_name`, `cou_name`, `score` 
+    from `tb_student`, `tb_course`, `tb_record` 
+    where `tb_student`.`stu_id`=`tb_record`.`stu_id` 
+    and `tb_course`.`cou_id`=`tb_record`.`cou_id` 
+    and `score` is not null 
+    order by `score` desc 
+    limit 5 offset 5;
+
+    -- 補充：上面的查詢結果取第11-15條數據(分頁查詢)
+    select `stu_name`, `cou_name`, `score` 
+    from `tb_student`, `tb_course`, `tb_record` 
+    where `tb_student`.`stu_id`=`tb_record`.`stu_id` 
+    and `tb_course`.`cou_id`=`tb_record`.`cou_id` 
+    and `score` is not null 
+    order by `score` desc 
+    limit 5 offset 10;
+
+    -- 查詢選課學生的姓名和平均成績(子查詢和連接查詢)
+    select `stu_name`, `avg_score` 
+    from `tb_student` inner join (
+        select `stu_id` as `sid`, round(avg(`score`), 1) as avg_score 
+        from `tb_record` group by `stu_id`
+    ) as `t2` on `stu_id`=`sid`;
+
+    -- 查詢學生的姓名和選課的數量
+    select `stu_name`, `total` from `tb_student` as `t1`
+    inner join (
+        select `stu_id`, count(*) as `total`
+        from `tb_record` group by `stu_id`
+    ) as `t2` on `t1`.`stu_id`=`t2`.`stu_id`;
+
+    -- 查詢每個學生的姓名和選課數量(左外連接和子查詢)
+    -- 左外連接：左表（寫在join左邊的表）的每條記錄都可以查出來，不滿足連表條件的地方填充null。
+    select `stu_name`, coalesce(`total`, 0) as `total`
+    from `tb_student` as `t1`
+    left outer join (
+        select `stu_id`, count(*) as `total`
+        from `tb_record` group by `stu_id`
+    ) as `t2` on `t1`.`stu_id`=`t2`.`stu_id`;
+
+    -- 修改選課記錄表，去掉 stu_id 列的外鍵約束
+    alter table `tb_record` drop foreign key `fk_record_stu_id`;
+
+    -- 插入兩條新紀錄（注意：沒有學號為 5566 的學生）
+    insert into `tb_record` 
+    values
+        (default, 5566, 1111, '2019-09-02', 80),
+        (default, 5566, 2222, '2019-09-02', 70);
+
+    -- 右外連接：右表（寫在join右邊的表）的每條記錄都可以查出來，不滿足連表條件的地方填充null。
+    select `stu_name`, `total` from `tb_student` as `t1`
+    right outer join (
+        select `stu_id`, count(*) as `total`
+        from `tb_record` group by `stu_id`
+    ) as `t2` on `t1`.`stu_id`=`t2`.`stu_id`;
+
+    -- 全外連接：左表和右表的每條記錄都可以查出來，不滿足連表條件的地方填充null。
+    -- 說明：MySQL不支持全外連接，所以用左外連接和右外連接的並集來表示。
+    select `stu_name`, `total`
+    from `tb_student` as `t1`
+    left outer join (
+        select `stu_id`, count(*) as `total`
+        from `tb_record` group by `stu_id`
+    ) as `t2` on `t1`.`stu_id`=`t2`.`stu_id`
+    union 
+    select `stu_name`, `total` from `tb_student` as `t1`
+    right outer join (
+        select `stu_id`, count(*) as `total`
+        from `tb_record` group by `stu_id`
+    ) as `t2` on `t1`.`stu_id`=`t2`.`stu_id`;
+
+上面的DML有幾個地方需要加以說明：
+1.MySQL目前的版本不支持全外連接，上面我們通過union操作，將左外連接和右外連接的結果求並集實現全外連接的效果。大家可以通過下面的圖來加深對連表操作的認識。
+2.MySQL 中支持多種類型的運算符，包括：算術運算符（+、-、*、/、%）、比較運算符（=、<>、<=>、<、<=、>、>=、BETWEEN...AND...、IN、IS NULL、IS NOT NULL、LIKE、RLIKE、REGEXP）、邏輯運算符（NOT、AND、OR、XOR）和位運算符（&、|、^、~、>>、<<），我們可以在 DML 中使用這些運算符處理數據。
+3.在查詢數據時，可以在SELECT語句及其子句（如WHERE子句、ORDER BY子句、HAVING子句等）中使用函數，這些函數包括字符串函數、數值函數、時間日期函數、流程函數等，如下面的表格所示。
+
+常用字符串函數。
+
+函數	                    功能
+CONCAT              	    將多個字符串連接成一個字符串
+FORMAT              	    將數值格式化成字符串並指定保留幾位小數
+FROM_BASE64 / TO_BASE64	    BASE64解碼/編碼
+BIN / OCT / HEX	            將數值轉換成二進制/八進制/十六進製字符串
+LOCATE	                    在字符串中查找一個子串的位置
+LEFT / RIGHT	            返回一個字符串左邊/右邊指定長度的字符
+LENGTH / CHAR_LENGTH	    返回字符串的長度以字節/字符為單位
+LOWER / UPPER	            返回字符串的小寫/大寫形式
+LPAD / RPAD	                如果字符串的長度不足，在字符串左邊/右邊填充指定的字符
+LTRIM / RTRIM	            去掉字符串前面/後面的空格
+ORD / CHAR	                返回字符對應的編碼/返回編碼對應的字符
+STRCMP	                    比較字符串，返回-1、0、1分別表示小於、等於、大於
+SUBSTRING	                返回字符串指定範圍的子串
+
+常用數值函數。
+函數	                                    功能
+ABS	                                        返回一個數的絕度值
+CEILING / FLOOR                             返回一個數上取整/下取整的結果
+CONV	                                    將一個數從一種進制轉換成另一種進制
+CRC32	                                    計算循環冗餘校驗碼
+EXP / LOG / LOG2 / LOG10	                計算指數/對數
+POW	                                        求冪
+RAND	                                    返回[0,1)範圍的隨機數
+ROUND	                                    返回一個數四捨五入後的結果
+SQRT	                                    返回一個數的平方根
+TRUNCATE	                                截斷一個數到指定的精度
+SIN / COS / TAN / COT / ASIN / ACOS / ATAN	三角函數
+
+常用時間日期函數。
+函數                     功能
+CURDATE / CURTIME / NOW	獲取當前日期/時間/日期和時間
+ADDDATE / SUBDATE	    將兩個日期表達式相加/相減並返回結果
+DATE / TIME             從字符串中獲取日期/時間
+YEAR / MONTH / DAY      從日期中獲取年/月/日
+HOUR / MINUTE / SECOND	從時間中獲取時/分/秒
+DATEDIFF / TIMEDIFF     返回兩個時間日期表達式相差多少天/小時
+MAKEDATE / MAKETIME     製造一個日期/時間
+
+常用流程函數。
+函數	    功能
+IF	        根據條件是否成立返回不同的值
+IFNULL	    如果為NULL則返回指定的值否則就返回本身
+NULLIF	    兩個表達式相等就返回NULL否則返回第一個表達式的值
+
+其他常用函數。
+函數	                功能
+MD5 / SHA1 / SHA2	    返回字符串對應的哈希摘要
+CHARSET / COLLATION	    返回字符集/校對規則
+USER / CURRENT_USER	    返回當前用戶
+DATABASE	            返回當前數據庫名
+VERSION	                返回當前數據庫版本
+FOUND_ROWS / ROW_COUNT	返回查詢到的行數/受影響的行數
+LAST_INSERT_ID	        返回最後一個自增主鍵的值
+UUID / UUID_SHORT	    返回全局唯一標識符
