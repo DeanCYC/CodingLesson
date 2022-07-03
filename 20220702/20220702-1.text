@@ -1,0 +1,90 @@
+MySQL 新特性
+JSON類型
+
+很多開發者在使用關係型數據庫做數據持久化的時候，常常感到結構化的存儲缺乏靈活性，因為必須事先設計好所有的列以及對應的數據類型。在業務發展和變化的過程中，如果需要修改表結構，這絕對是比較麻煩和難受的事情。從 MySQL 5.7 版本開始，MySQL引入了對 JSON 數據類型的支持（MySQL 8.0 解決了 JSON 的日誌性能瓶頸問題），用好 JSON 類型，其實就是打破了關係型數據庫和非關係型數據庫之間的界限，為數據持久化操作帶來了更多的便捷。
+
+JSON 類型主要分為 JSON 對象和 JSON數組兩種，如下所示。
+    1.JSON 對象
+        {"name": "駱昊", "tel": "13122335566", "QQ": "957658"}
+    2.JSON 數組
+        [1, 2, 3]
+        [{"name": "駱昊", "tel": "13122335566"}, {"name": "王大錘", "QQ": "123456"}]
+
+哪些地方需要用到JSON類型呢？舉一個簡單的例子，現在很多產品的用戶登錄都支持多種方式，例如手機號、微信、QQ、新浪微博等，但是一般情況下我們又不會要求用戶提供所有的這些信息，那麼用傳統的設計方式，就需要設計多個列來對應多種登錄方式，可能還需要允許這些列存在空值，這顯然不是很好的選擇；另一方面，如果產品又增加了一種登錄方式，那麼就必然要修改之前的表結構，這就更讓人痛苦了。但是，有了 JSON 類型，剛才的問題就迎刃而解了，我們可以做出如下所示的設計。
+    create table `tb_test`
+    (
+    `user_id` bigint unsigned,
+    `login_info` json,
+    primary key (`user_id`)
+    ) engine=innodb;
+
+    insert into `tb_test` values 
+        (1, '{"tel": "13122335566", "QQ": "654321", "wechat": "jackfrued"}'),
+        (2, '{"tel": "13599876543", "weibo": "wangdachui123"}');
+
+如果要查詢用戶的手機和微信號，可以用如下所示的 SQL 語句。
+    select 
+        `user_id`,
+        json_unquote(json_extract(`login_info`, '$.tel')) as 手機號,
+        json_unquote(json_extract(`login_info`, '$.wechat')) as 微信 
+    from `tb_test`;
+
+    +---------+-------------+-----------+
+    | user_id | 手機號      | 微信       |
+    +---------+-------------+-----------+
+    |       1 | 13122335566 | jackfrued |
+    |       2 | 13599876543 | NULL      |
+    +---------+-------------+-----------+
+
+因為支持 JSON 類型，MySQL 也提供了配套的處理 JSON 數據的函數，就像上面用到的json_extract和json_unquote。當然，上面的 SQL 還有更為便捷的寫法，如下所示。
+    select 
+        `user_id`,
+        `login_info` ->> '$.tel' as 手機號,
+        `login_info` ->> '$.wechat' as 微信
+    from `tb_test`;
+
+再舉個例子，如果我們的產品要實現用戶畫像功能（給用戶打標籤），然後基於用戶畫像給用戶推薦平台的服務或消費品之類的東西，我們也可以使用 JSON 類型來保存用戶畫像數據，示意代碼如下所示。
+
+創建畫像標籤表。
+    create table `tb_tags`
+    (
+    `tag_id` int unsigned not null comment '標籤ID',
+    `tag_name` varchar(20) not null comment '標籤名',
+    primary key (`tag_id`)
+    ) engine=innodb;
+
+    insert into `tb_tags` (`tag_id`, `tag_name`) 
+    values
+        (1, '70後'),
+        (2, '80後'),
+        (3, '90後'),
+        (4, '00後'),
+        (5, '愛運動'),
+        (6, '高學歷'),
+        (7, '小資'),
+        (8, '有房'),
+        (9, '有車'),
+        (10, '愛看電影'),
+        (11, '愛網購'),
+        (12, '常點外賣');
+
+為用戶打標籤。
+    create table `tb_users_tags`
+    (
+    `user_id` bigint unsigned not null comment '用戶ID',
+    `user_tags` json not null comment '用戶標籤'
+    ) engine=innodb;
+
+    insert into `tb_users_tags` values 
+        (1, '[2, 6, 8, 10]'),
+        (2, '[3, 10, 12]'),
+        (3, '[3, 8, 9, 11]');
+
+接下來，我們通過一組查詢來了解 JSON 類型的巧妙之處。
+    1.查詢愛看電影（有10這個標籤）的用戶ID。
+        select * from `tb_users` where 10 member of (user_tags->'$');
+    2.查詢愛看電影（有10這個標籤）的80後（有2這個標籤）用戶ID。
+        select * from `tb_users` where json_contains(user_tags->'$', '[2, 10]');
+    3.查詢愛看電影或80後或90後的用戶ID。
+        select `user_id` from `tb_users_tags` where json_overlaps(user_tags->'$', '[2, 3, 10]');
+#說明：上面的查詢用到了member of謂詞和兩個 JSON 函數，json_contains可以檢查 JSON 數組是否包含了指定的元素，而json_overlaps可以檢查 JSON 數組是否與指定的數組有重疊部分。
