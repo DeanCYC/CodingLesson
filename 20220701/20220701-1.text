@@ -5,7 +5,7 @@ SQL 詳解
 
 DDL（數據定義語言）
 下面我們來實現一個選課系統的數據庫，如下所示的 SQL 創建了名為school的數據庫和五張表，分別是學院表（tb_college）、學生表（tb_student）、教師表（tb_teacher）、課程表（tb_course）和選課記錄表（tb_record），其中學生和教師跟學院之間是多對一關係，課程跟老師之間也是多對一關係，學生和課程是多對多關係，選課記錄表就是維持學生跟課程多對多關係的中間表。
-    ``-- 如果存在名為school的數據庫就刪除它
+    -- 如果存在名為school的數據庫就刪除它
     drop database if exists `school`;
 
     -- 創建名為school的數據庫並設置默認的字符集和排序方式
