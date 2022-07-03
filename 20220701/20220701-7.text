@@ -1,0 +1,75 @@
+函數
+MySQL 中的函數跟 Python 中的函數太多的差異，因為函數都是用來封裝功能上相對獨立且會被重複使用的代碼的。如果非要找出一些差別來，那麼 MySQL 中的函數是可以執行 SQL 語句的。下面的例子，我們通過自定義函數實現了截斷超長字符串的功能。
+    delimiter $$
+
+    create function truncate_string(
+        content varchar(10000),
+        max_length int unsigned
+    ) returns varchar(10000) no sql
+    begin
+        declare result varchar(10000) default content;
+        if char_length(content) > max_length then
+            set result = left(content, max_length);
+            set result = concat(result, '……');
+        end if;
+        return result;
+    end $$
+
+    delimiter ;
+
+#說明1：函數聲明後面的no sql是聲明函數體並沒有使用 SQL 語句；如果函數體中需要通過 SQL 讀取數據，需要聲明為reads sql data。
+#說明2：定義函數前後的delimiter命令是為了修改定界符，因為函數體中的語句都是用;表示結束，如果不重新定義定界符，那麼遇到的;的時候代碼就會被截斷執行，顯然這不是我們想要的效果。
+
+在查詢中調用自定義函數。
+    select truncate_string('和我在成都的街頭走一走，直到所有的燈都熄滅了也不停留', 10) as short_string;
+
+    +--------------------------------------+
+    | short_string                         |
+    +--------------------------------------+
+    | 和我在成都的街頭走一……                  |
+    +--------------------------------------+
+
+過程
+過程（又稱存儲過程）是事先編譯好存儲在數據庫中的一組 SQL 的集合，調用過程可以簡化應用程序開發人員的工作，減少與數據庫服務器之間的通信，對於提升數據操作的性能也是有幫助的。其實迄今為止，我們使用的 SQL 語句都是針對一個或多個表的單條語句，但在實際開發中經常會遇到某個操作需要多條 SQL 語句才能完成的情況。例如，電商網站在受理用戶訂單時，需要做以下一系列的處理。
+    1.通過查詢來核對庫存中是否有對應的物品以及庫存是否充足。
+    2.如果庫存有物品，需要鎖定庫存以確保這些物品不再賣給別人， 並且要減少可用的物品數量以反映正確的庫存量。
+    3.如果庫存不足，可能需要進一步與供應商進行交互或者至少產生一條系統提示消息。
+    4.不管受理訂單是否成功，都需要產生流水記錄，而且需要給對應的用戶產生一條通知信息。
+
+我們可以通過過程將復雜的操作封裝起來，這樣不僅有助於保證數據的一致性，而且將來如果業務發生了變動，只需要調整和修改過程即可。對於調用過程的用戶來說，過程並沒有暴露數據表的細節，而且執行過程比一條條的執行一組 SQL 要快得多。
+
+下面的過程實現了查詢某門課程的最高分、最低分和平均分。
+    drop procedure if exists sp_score_stat;
+
+    delimiter $$
+
+    create procedure sp_score_stat(
+        courseId int, 
+        out maxScore decimal(4,1), 
+        out minScore decimal(4,1),
+        out avgScore decimal(4,1)
+    )
+    begin
+        select max(score) into maxScore from tb_record where cou_id=courseId;
+        select min(score) into minScore from tb_record where cou_id=courseId;
+        select avg(score) into avgScore from tb_record where cou_id=courseId;
+    end $$
+
+    delimiter ;
+
+#說明：在定義過程時，因為可能需要書寫多條 SQL，而分隔這些 SQL 需要使用分號作為分隔符，如果這個時候，仍然用分號表示整段代碼結束，那麼定義過程的 SQL 就會出現錯誤，所以上面我們用delimiter $$將整段代碼結束的標記定義為$$，那麼代碼中的分號將不再表示整段代碼的結束，整段代碼只會在遇到end $$時才會執行。在定義完過程後，通過delimiter ;將結束符重新改回成分號（恢復現場）。
+
+上面定義的過程有四個參數，其中第一個參數是輸入參數，代表課程的編號，後面的參數都是輸出參數，因為過程不能定義返回值，只能通過輸出參數將執行結果帶出，定義輸出參數的關鍵字是out，默認情況下參數都是輸入參數。
+
+調用過程。
+    call sp_score_stat(1111, @a, @b, @c);
+
+獲取輸出參數的值。
+    select @a as 最高分, @b as 最低分, @c as 平均分;
+
+刪除過程。
+    drop procedure sp_score_stat;
+
+在過程中，我們可以定義變量、條件，可以使用分支和循環語句，可以通過游標操作查詢結果，還可以使用事件調度器，這些內容我們暫時不在此處進行介紹。雖然我們說了很多過程的好處，但是在實際開發中，如果頻繁的使用過程並將大量複雜的運算放到過程中，會給據庫服務器造成巨大的壓力，而數據庫往往都是性能瓶頸所在，使用過程無疑是雪上加霜的操作。所以，對於互聯網產品開發，我們一般建議讓數據庫只做好存儲，複雜的運算和處理交給應用服務器上的程序去完成，如果應用服務器變得不堪重負了，我們可以比較容易的部署多台應用服務器來分攤這些壓力。
+
+如果大家對上面講到的視圖、函數、過程包括我們沒有講到的觸發器這些知識有興趣，建議大家閱讀 MySQL 的入門讀物《MySQL必知必會》進行一般性了解即可，因為這些知識點在大家將來的工作中未必用得上，學了也可能僅僅是為了應付面試而已。
