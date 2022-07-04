@@ -1,0 +1,43 @@
+案例講解
+下面我們為大家講解一個將數據庫表數據導出到 Excel 文件的例子，我們需要先安裝openpyxl三方庫，命令如下所示。
+
+pip install openpyxl
+接下來，我們通過下面的代碼實現了將數據庫hrs中所有員工的編號、姓名、職位、月薪、補貼和部門名稱導出到一個 Excel 文件中。
+
+import openpyxl
+import pymysql
+
+# 創建工作簿對象
+workbook = openpyxl.Workbook()
+# 獲得默認的工作表
+sheet = workbook.active
+# 修改工作表的標題
+sheet.title = '員工基本信息'
+# 給工作表添加表頭
+sheet.append(('工號', '姓名', '職位', '月薪', '補貼', '部門'))
+# 創建連接（Connection）
+conn = pymysql.connect(host='127.0.0.1', port=3306,
+                       user='guest', password='Guest.618',
+                       database='hrs', charset='utf8mb4')
+try:
+    # 獲取游標對象（Cursor）
+    with conn.cursor() as cursor:
+        # 通過游標對象執行SQL語句
+        cursor.execute(
+            'select `eno`, `ename`, `job`, `sal`, coalesce(`comm`, 0), `dname` '
+            'from `tb_emp` natural join `tb_dept`'
+        )
+        # 通過游標抓取數據
+        row = cursor.fetchone()
+        while row:
+            # 將數據逐行寫入工作表中
+            sheet.append(row)
+            row = cursor.fetchone()
+    # 保存工作簿
+    workbook.save('hrs.xlsx')
+except pymysql.MySQLError as err:
+    print(err)
+finally:
+    # 關閉連接釋放資源
+    conn.close()
+大家可以參考上面的例子，試一試把 Excel 文件的數據導入到指定數據庫的指定表中，看看是否可以成功。
