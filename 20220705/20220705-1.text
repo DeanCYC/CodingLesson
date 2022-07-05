@@ -1,0 +1,30 @@
+Hive簡介
+Hive是Facebook開源的一款基於Hadoop的數據倉庫工具，是目前應用最廣泛的大數據處理解決方案，它能將SQL查詢轉變為 MapReduce（Google提出的一個軟件架構，用於大規模數據集的並行運算）任務，對SQL提供了完美的支持，能夠非常方便的實現大數據統計。
+#說明：可以通過https://www.edureka.co/blog/hadoop-ecosystem來了解Hadoop生態圈。
+
+如果要簡單的介紹Hive，那麼以下兩點是其核心：
+    1.把HDFS中結構化的數據映射成表。
+    2.通過把Hive-SQL進行解析和轉換，最終生成一系列基於Hadoop的MapReduce任務/Spark任務，通過執行這些任務完成對數據的處理。也就是說，即便不學習Java、Scala這樣的編程語言，一樣可以實現對數據的處理。
+
+Hive和傳統關係型數據庫的對比如下表所示。
+             Hive	                RDBMS
+查詢語言	  HQL	                 SQL
+存儲數據.     HDFS                   本地文件系統
+執行方式	  MapReduce / Spark	     Executor
+執行延遲	  高	                 低
+數據規模	  大	                 小
+
+
+準備工作
+1.搭建如下圖所示的大數據平台。
+    bigdata-basic-env
+
+2.通過Client節點訪問大數據平台。
+    bigdata-vpc
+
+3.創建文件Hadoop的文件系統。
+    hadoop fs -mkdir /data
+    hadoop fs -chmod g+w /data
+
+4.將準備好的數據文件拷貝到Hadoop文件系統中。
+    hadoop fs -put /home/ubuntu/data/* /data
