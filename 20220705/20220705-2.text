@@ -1,0 +1,90 @@
+創建/刪除數據庫
+
+創建。
+    create database if not exists demo;
+
+或
+    hive -e "create database demo;"
+
+刪除。
+    drop database if exists demo;
+
+切換。
+    use demo;
+
+數據類型
+Hive的數據類型如下所示。
+
+基本數據類型。
+數據類型	    佔用空間	支持版本
+tinyint	       1-Byte	
+smallint	   2-Byte	
+int	           4-Byte	
+bigint	       8-Byte	
+boolean		
+float	       4-Byte	
+double	       8-Byte	
+string		
+binary		             0.8版本
+timestamp	             0.8版本
+decimal		             0.11版本
+char		             0.13版本
+varchar		             0.12版本
+date		             0.12版本
+
+複雜數據類型。
+數據類型	  描述	                     例子
+struct	     和C語言中的結構體類似	      struct<first_name:string, last_name:string>
+map	         由鍵值對構成的元素的集合	   map<string,int>
+array	     具有相同類型的變量的容器	   array<string>
+
+創建和使用表
+1.創建內部表。
+    create table if not exists user_info 
+    (
+    user_id string,
+    user_name string, 
+    sex string,
+    age int,
+    city string,
+    firstactivetime string,
+    level int,
+    extra1 string,
+    extra2 map<string,string>
+    )
+    row format delimited fields terminated by '\t'
+    collection items terminated by ','
+    map keys terminated by ':'
+    lines terminated by '\n'
+    stored as textfile;
+
+2.加載數據。
+    load data local inpath '/home/ubuntu/data/user_info/user_info.txt' overwrite into table user_info;
+
+或
+    load data inpath '/data/user_info/user_info.txt' overwrite into table user_info;
+
+3.創建分區表。
+    create table if not exists user_trade 
+    (
+    user_name string,
+    piece int,
+    price double,
+    pay_amount double,
+    goods_category string,
+    pay_time bigint
+    )  
+    partitioned by (dt string)
+    row format delimited fields terminated by '\t';
+
+4.設置動態分區。
+    set hive.exec.dynamic.partition=true;
+    set hive.exec.dynamic.partition.mode=nonstrict;
+    set hive.exec.max.dynamic.partitions=10000;
+    set hive.exec.max.dynamic.partitions.pernode=10000;
+
+5.拷貝數據（Shell命令）。
+    hdfs dfs -put /home/ubuntu/data/user_trade/* /user/hive/warehouse/demo.db/user_trade
+
+6.修復分區表。
+    msck repair table user_trade;
