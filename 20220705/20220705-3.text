@@ -1,0 +1,23 @@
+查詢
+基本語法
+    select user_name from user_info where city='beijing' and sex='female' limit 10;
+    select user_name, piece, pay_amount from user_trade where dt='2019-03-24' and goods_category='food';
+
+group by
+    -- 查詢2019年1月到4月，每個品類有多少人購買，累計金額是多少
+    select goods_category, count(distinct user_name) as user_num, sum(pay_amount) as total from user_trade where dt between '2019-01-01' and '2019-04-30' group by goods_category;
+
+    -- 查詢2019年4月支付金額超過5萬元的用戶
+    select user_name, sum(pay_amount) as total from user_trade where dt between '2019-04-01' and '2019-04-30' group by user_name having sum(pay_amount) > 50000;
+
+order by
+    -- 查詢2019年4月支付金額最多的用戶前5名
+    select user_name, sum(pay_amount) as total from user_trade where dt between '2019-04-01' and '2019-04-30' group by user_name order by total desc limit 5;
+
+常用函數
+    1.from_unixtime：將時間戳轉換成日期
+    2.unix_timestamp：將日期轉換成時間戳
+    3.datediff：計算兩個日期的時間差
+    4.if：根據條件返回不同的值
+    5.substr：字符串取子串
+    6.get_json_object：從JSON字符串中取出指定的key對應的value，如：get_json_object(info, '$.first_name')。
