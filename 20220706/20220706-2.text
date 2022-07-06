@@ -1,0 +1,151 @@
+Redis的服務器和客戶端
+
+接下來啟動Redis服務器，下面的方式將以默認的配置啟動Redis服務。
+    redis-server
+
+如果希望修改Redis的配置（如端口、認證口令、持久化方式等），可以通過下面兩種方式。
+方式一：通過參數指定認證口令和AOF持久化方式。
+    redis-server --requirepass yourpass --appendonly yes
+
+方式二：通過指定的配置文件來修改Redis的配置。
+    redis-server /root/redis-5.0.10/redis.conf
+
+下面我們使用第一種方式來啟動Redis並將其置於後台運行，將Redis產生的輸出重定向到名為redis.log的文件中。
+    redis-server --requirepass yourpass > redis.log &
+
+可以通過ps或者netstat來檢查Redis服務器是否啟動成功。
+    ps -ef | grep redis-server
+    netstat -nap | grep redis-server
+
+接下來，我們嘗試用Redis命令行工具redis-cli去連接服務器，該工具默認連接本機的6379端口，如果需要指定Redis服務器和端口，可以使用-h和-p參數分別進行指定。
+    redis-cli
+
+進入命令行工具後，就可以通過Redis的命令來操作Redis服務器，如下所示。
+    127.0.0.1:6379> auth yourpass
+    OK
+    127.0.0.1:6379> ping
+    PONG
+    127.0.0.1:6379>
+
+Redis有著非常豐富的數據類型，也有很多的命令來操作這些數據，具體的內容可以查看Redis命令參考，在這個網站上，除了Redis的命令參考，還有Redis的詳細文檔，其中包括了通知、事務、主從復制、持久化、哨兵、集群等內容。
+#說明：上面的插圖來自付磊和張益軍編著的《Redis開發與運維》一書。
+
+    127.0.0.1:6379> set username admin
+    OK
+    127.0.0.1:6379> get username
+    "admin"
+    127.0.0.1:6379> set password "123456" ex 300
+    OK
+    127.0.0.1:6379> get password
+    "123456"
+    127.0.0.1:6379> ttl username
+    (integer) -1
+    127.0.0.1:6379> ttl password
+    (integer) 286
+    127.0.0.1:6379> hset stu1 name hao
+    (integer) 0
+    127.0.0.1:6379> hset stu1 age 38
+    (integer) 1
+    127.0.0.1:6379> hset stu1 gender male
+    (integer) 1
+    127.0.0.1:6379> hgetall stu1
+    1) "name"
+    2) "hao"
+    3) "age"
+    4) "38"
+    5) "gender"
+    6) "male"
+    127.0.0.1:6379> hvals stu1
+    1) "hao"
+    2) "38"
+    3) "male"
+    127.0.0.1:6379> hmset stu2 name wang age 18 gender female tel 13566778899
+    OK
+    127.0.0.1:6379> hgetall stu2
+    1) "name"
+    2) "wang"
+    3) "age"
+    4) "18"
+    5) "gender"
+    6) "female"
+    7) "tel"
+    8) "13566778899"
+    127.0.0.1:6379> lpush nums 1 2 3 4 5
+    (integer) 5
+    127.0.0.1:6379> lrange nums 0 -1
+    1) "5"
+    2) "4"
+    3) "3"
+    4) "2"
+    5) "1"
+    127.0.0.1:6379> lpop nums
+    "5"
+    127.0.0.1:6379> lpop nums
+    "4"
+    127.0.0.1:6379> rpop nums
+    "1"
+    127.0.0.1:6379> rpop nums
+    "2"
+    127.0.0.1:6379> sadd fruits apple banana orange apple grape grape
+    (integer) 4
+    127.0.0.1:6379> scard fruits
+    (integer) 4
+    127.0.0.1:6379> smembers fruits
+    1) "grape"
+    2) "orange"
+    3) "banana"
+    4) "apple"
+    127.0.0.1:6379> sismember fruits apple
+    (integer) 1
+    127.0.0.1:6379> sismember fruits durian
+    (integer) 0
+    127.0.0.1:6379> sadd nums1 1 2 3 4 5
+    (integer) 5
+    127.0.0.1:6379> sadd nums2 2 4 6 8
+    (integer) 4
+    127.0.0.1:6379> sinter nums1 nums2
+    1) "2"
+    2) "4"
+    127.0.0.1:6379> sunion nums1 nums2
+    1) "1"
+    2) "2"
+    3) "3"
+    4) "4"
+    5) "5"
+    6) "6"
+    7) "8"
+    127.0.0.1:6379> sdiff nums1 nums2
+    1) "1"
+    2) "3"
+    3) "5"
+    127.0.0.1:6379> zadd topsinger 5234 zhangxy 1978 chenyx 2235 zhoujl 3520 xuezq
+    (integer) 4
+    127.0.0.1:6379> zrange topsinger 0 -1 withscores
+    1) "chenyx"
+    2) "1978"
+    3) "zhoujl"
+    4) "2235"
+    5) "xuezq"
+    6) "3520"
+    7) "zhangxy"
+    8) "5234"
+    127.0.0.1:6379> zrevrange topsinger 0 -1
+    1) "zhangxy"
+    2) "xuezq"
+    3) "zhoujl"
+    4) "chenyx"
+    127.0.0.1:6379> zrevrank topsinger zhoujl
+    (integer) 2
+    127.0.0.1:6379> geoadd pois 116.39738549206541 39.90862689286386 tiananmen
+    (integer) 1
+    127.0.0.1:6379> geoadd pois 116.27172936413572 39.99135172904494 yiheyuan
+    (integer) 1
+    127.0.0.1:6379> geoadd pois 117.27766503308104 40.65332064313784 gubeishuizhen
+    (integer) 1
+    127.0.0.1:6379> geodist pois tiananmen gubeishuizhen km
+    "111.5333"
+    127.0.0.1:6379> geodist pois tiananmen yiheyuan km
+    "14.1230"
+    127.0.0.1:6379> georadius pois 116.86499108288572 40.40149669363615 50 km withdist
+    1) 1) "gubeishuizhen"
+    2) "44.7408"
