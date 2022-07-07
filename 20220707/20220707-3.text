@@ -1,0 +1,55 @@
+創建自己的應用
+如果要開發自己的Web應用，需要先在Django項目中創建“應用”，一個Django項目可以包含一個或多個應用。
+    1.在PyCharm的終端中執行下面的命令，創建名為first的應用。
+        python manage.py startapp first
+      執行上面的命令會在當前路徑下創建first目錄，其目錄結構如下所示：
+        __init__.py：一個空文件，告訴Python解釋器這個目錄應該被視為一個Python的包。
+        admin.py：可以用來註冊模型，用於在Django框架自帶的管理後台中管理模型。
+        apps.py：當前應用的配置文件。
+        migrations：存放與模型有關的數據庫遷移信息。
+            __init__.py：一個空文件，告訴Python解釋器這個目錄應該被視為一個Python的包。
+        models.py：存放應用的數據模型（MTV中的M）。
+        tests.py：包含測試應用各項功能的測試類和測試函數。
+        views.py：處理用戶HTTP請求並返回HTTP響應的函數或類（MTV中的V）。
+
+    2.修改應用目錄下的視圖文件views.py。
+        from django.http import HttpResponse
+
+
+        def show_index(request):
+            return HttpResponse('<h1>Hello, Django!</h1>')
+
+    3.修改Django項目目錄下的urls.py文件，將視圖函數和用戶在瀏覽器中請求的路徑對應。
+        from django.contrib import admin
+        from django.urls import path, include
+
+        from first.views import show_index
+
+        urlpatterns = [
+            path('admin/', admin.site.urls),
+            path('hello/', show_index),
+        ]
+
+    4.重新運行項目，並打開瀏覽器中訪問http://127.0.0.1:8000/hello/。
+
+    5.上面我們通過代碼為瀏覽器生成了內容，但仍然是靜態內容，如果要生成動態內容，可以修改views.py文件並添加如下所示的代碼。
+        from random import sample
+
+        from django.http import HttpResponse
+
+
+        def show_index(request):
+            fruits = [
+                'Apple', 'Orange', 'Pitaya', 'Durian', 'Waxberry', 'Blueberry',
+                'Grape', 'Peach', 'Pear', 'Banana', 'Watermelon', 'Mango'
+            ]
+            selected_fruits = sample(fruits, 3)
+            content = '<h3>今天推薦的水果是：</h3>'
+            content += '<hr>'
+            content += '<ul>'
+            for fruit in selected_fruits:
+                content += f'<li>{fruit}</li>'
+            content += '</ul>'
+            return HttpResponse(content)
+
+    6.刷新頁面查看程序的運行結果，看看每次刷新的網頁的時候，是不是可以看到不一樣的內容。
