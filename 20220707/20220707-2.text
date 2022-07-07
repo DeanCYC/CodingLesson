@@ -1,0 +1,80 @@
+快速上手
+第一個Django項目
+1.檢查Python環境：Django 1.11需要Python 2.7或Python 3.4以上的版本；Django 2.0需要Python 3.4以上的版本；Django 2.1和2.2需要Python 3.5以上的版本；Django 3.0需要Python 3.6以上版本。
+#說明：Django框架不同版本所需的Python解釋器環境，可以在Django官方文檔的FAQ中找到。
+可以在macOS的終端中輸入下面的命令檢查Python解釋器版本，Windows系統可以在命令行提示符中輸入python --version。
+    python3 --version
+
+    也可以在Python的交互式環境中執行下面的代碼來查看Python解釋器的版本。
+
+    ```Shell
+    import sys
+    sys.version
+    sys.version_info
+
+2.更新包管理工具並安裝Django環境（用於創建Django項目）。
+#說明：在更新這個文檔時，Django最新的正式版本是3.0.7，Django 3.0提供了對ASGI的支持，可以實現全雙工的異步通信，但是目前的使用體驗一般，所以暫時不推薦大家使用Django 3.0，下面我們安裝的是Django 2.2.13版本。使用pip安裝三方庫和工具時，可以通過==來指定安裝的版本。
+    pip3 install -U pip
+    pip3 install django==2.2.13
+
+3.檢查Django環境並使用django-admin命令創建Django項目（項目名稱為hellodjango）。
+    django-admin --version
+    django-admin startproject hellodjango
+
+4.用PyCharm打開創建好的Djang項目，並為其添加虛擬環境。
+PyCharm的項目瀏覽器中，最頂層的文件夾hellodjango是Python項目文件夾，這個文件夾的名字並不重要，Django項目也不關心這個文件夾叫什麼名字。該文件夾下有一個同名的文件夾，它是Django項目文件夾，其中包含了__init__.py、settings.py、urls.py、wsgi.py四個文件，與名為hellodjango的Django項目文件夾同級的還有一個名為manage.py 的文件，這些文件的作用如下所示：
+    -hellodjango/__init__.py：空文件，告訴Python解釋器這個目錄應該被視為一個Python的包。
+    -hellodjango/settings.py：Django項目的配置文件。
+    -hellodjango/urls.py：Django項目的URL映射聲明，就像是網站的“目錄”。
+    -hellodjango/wsgi.py：項目運行在WSGI兼容Web服務器上的入口文件。
+    -manage.py： 管理Django項目的腳本程序。
+#說明：WSGI全稱是Web服務器網關接口，維基百科上給出的解釋是“為Python語言定義的Web服務器和Web應用程序或框架之間的一種簡單而通用的接口”。
+
+創建虛擬環境的界面如下圖所示。
+    pycharm-django-virtual-environment
+
+5.安裝項目依賴項。
+方法一：打開PyCharm的終端，在終端中通過pip命令安裝Django項目的依賴項。
+#說明：由於已經基於Python 3解釋器環境為項目創建了虛擬環境，所以虛擬環境中的python命令對應的是Python 3的解釋器，而pip命令對應的是Python 3的包管理工具。
+    pip install django==2.2.13
+
+方法二：在PyCharm的偏好設置中，可以找到項目的解釋器環境和已經安裝的三方庫，可以通過點擊添加按鈕來安裝新的依賴項，需要提醒大家的是在安裝Django依賴項時，需要指定版本號，否則將默認安裝更新本文時最新的3.0.7版本。
+
+下圖展示了Django版本和Python版本的對應關係，請大家自行對號入座。
+Django版本	   Python版本
+1.8	          2.7、3.2、3.3、3.4、3.5
+1.9、1.10	  2.7、3.4、3.5
+1.11	      2.7、3.4、3.5、3.6、3.7（Django 1.11.17）
+2.0           3.4、3.5、3.6、3.7
+2.1           3.5、3.6、3.7
+2.2	          3.5、3.6、3.7、3.8（Django 2.2.8）
+3.0           3.6、3.7、3.8
+
+6.啟動Django自帶的服務器運行項目。
+方法一：在“Run”菜單選擇“Edit Configuration”，配置“Django server”運行項目（適用於專業版PyCharm）。
+方法二：在“Run”菜單選擇“Edit Configuration”，配置運行“Python”程序運行項目（適用於專業版和社區版PyCharm）。
+方法三：在PyCharm的終端（Terminal）中通過命令運行項目（適用於專業版和社區版PyCharm）。
+    python manage.py runserver
+
+7.查看運行效果。
+在瀏覽器中輸入http://127.0.0.1:8000訪問我們的服務器。
+#說明：
+    1.剛剛啟動的Django自帶的服務器只能用於開發和測試環境，因為這個服務器是純Python編寫的輕量級Web服務器，不適合在生產環境中使用。
+    2.如果修改了代碼，不需要為了讓修改的代碼生效而重新啟動Django自帶的服務器。但是，在添加新的項目文件時，該服務器不會自動重新加載，這個時候就得手動重啟服務器。
+    3.可以在終端中通過python manage.py help命令查看Django管理腳本程序可用的命令參數。
+    4.使用python manage.py runserver啟動服務器時，可以在後面添加參數來指定IP地址和端口號，默認情況下啟動的服務器將運行在本機的8000端口。
+    5.在終端中運行的服務器，可以通過Ctrl+C來停止它 。通過PyCharm的“運行配置”運行的服務器直接點擊窗口上的關閉按鈕就可以終止服務器的運行。
+    6.不能在同一個端口上啟動多個服務器，因為會導致地址的衝突（端口是對IP地址的擴展，也是計算機網絡地址的一部分）。
+
+8.修改項目的配置文件settings.py。
+    Django是一個支持國際化和本地化的框架，因此剛才我們看到的Django項目的默認首頁也是支持國際化的，我們可以通過修改配置文件將默認語言修改為中文，時區設置為東八區。
+
+    找到修改前的配置（在settings.py文件第100行以後）。
+        LANGUAGE_CODE = 'en-us'
+        TIME_ZONE = 'UTC'
+
+    修改為以下內容。
+        LANGUAGE_CODE = 'zh-hans'
+        TIME_ZONE = 'Asia/Chongqing'
+
+    刷新剛才的頁面，可以看到修改語言代碼和時區之後的結果。
