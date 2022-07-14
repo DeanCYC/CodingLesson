@@ -1,0 +1,113 @@
+使用ORM完成模型的CRUD操作
+有了Django框架的ORM，我們可以直接使用面向對象的方式來實現對數據的CRUD（增刪改查）操作。我們可以在PyCharm的終端中輸入下面的命令進入到Django項目的交互式環境，然後嘗試對模型的操作。
+    python manage.py shell
+
+新增
+    from polls.models import Subject
+
+    subject1 = Subject(name='Python全棧開發', intro='當下最熱門的學科', is_hot=True)
+    subject1.save()
+    subject2 = Subject(name='全棧軟件測試', intro='學習自動化測試的學科', is_hot=False)
+    subject2.save()
+    subject3 = Subject(name='JavaEE分佈式開發', intro='基於Java語言的服務器應用開發', is_hot=True)
+
+刪除
+    subject = Subject.objects.get(no=2)
+    subject.delete()
+
+更新
+    subject = Subject.objects.get(no=1)
+    subject.name = 'Python全棧+人工智能'
+    subject.save()
+
+查詢
+    1.查詢所有對象。
+        Subjects.objects.all()
+    2.過濾數據。
+        # 查詢名稱為“Python全棧+人工智能”的學科
+        Subject.objects.filter(name='Python全棧+人工智能')
+        # 查詢名稱包含“全棧”的學科（模糊查詢）
+        Subject.objects.filter(name__contains='全棧')
+        Subject.objects.filter(name__startswith='全棧')
+        Subject.objects.filter(name__endswith='全棧')
+
+        # 查詢所有熱門學科
+        Subject.objects.filter(is_hot=True)
+
+        # 查詢編號大於3小於10的學科
+        Subject.objects.filter(no__gt=3).filter(no__lt=10)
+        Subject.objects.filter(no__gt=3, no__lt=10)
+
+        # 查詢編號在3到7之間的學科
+        Subject.objects.filter(no__ge=3, no__le=7)
+        Subject.objects.filter(no__range=(3, 7))
+    3.查詢單個對象。
+        # 查詢主鍵為1的學科
+        Subject.objects.get(pk=1)
+        Subject.objects.get(no=1)
+        Subject.objects.filter(no=1).first()
+        Subject.objects.filter(no=1).last()
+    4.排序。
+        # 查詢所有學科按編號升序排列
+        Subject.objects.order_by('no')
+        # 查詢所有部門按部門編號降序排列
+        Subject.objects.order_by('-no')
+    5.切片（分頁查詢）。
+        # 按編號從小到大查詢前3個學科
+        Subject.objects.order_by('no')[:3]
+    6.計數。
+        # 查詢一共有多少個學科
+        Subject.objects.count()
+    7.高級查詢。
+        # 查詢編號為1的學科的老師
+        Teacher.objects.filter(subject__no=1)
+        Subject.objects.get(pk=1).teacher_set.all() 
+
+        # 查詢學科名稱有“全棧”二字的學科的老師
+        Teacher.objects.filter(subject__name__contains='全棧') 
+    #說明1：由於老師與學科之間存在多對一外鍵關聯，所以能通過學科反向查詢到該學科的老師（從一對多關係中“一”的一方查詢“多”的一方），反向查詢屬性默認的名字是類名小寫_set（如上面例子中的teacher_set），當然也可以在創建模型時通過ForeingKey的related_name屬性指定反向查詢屬性的名字。如果不希望執行反向查詢可以將related_name屬性設置為'+'或者以'+'開頭的字符串。
+    #說明2：ORM查詢多個對象時會返回QuerySet對象，QuerySet使用了惰性查詢，即在創建QuerySet對象的過程中不涉及任何數據庫活動，等真正用到對象時（對QuerySet求值）才向數據庫發送SQL語句並獲取對應的結果，這一點在實際開發中需要引起注意！
+    #說明3：如果希望更新多條數據，不用先逐一獲取模型對象再修改對象屬性，可以直接使用QuerySet對象的update()方法一次性更新多條數據。
+
+利用Django後台管理模型
+    1.在創建好模型類之後，可以通過Django框架自帶的後台管理應用（admin應用）實現對模型的管理。雖然實際應用中，這個後台可能並不能滿足我們的需求，但是在學習Django框架時，我們可以利用admin應用來管理我們的模型，同時也通過它來了解一個項目的後台管理系統需要哪些功能。使用Django自帶的admin應用步驟如下所示。
+    將admin應用所需的表遷移到數據庫中。 admin應用本身也需要數據庫的支持，而且在admin應用中已經定義好了相關的數據模型類，我們只需要通過模型遷移操作就能自動在數據庫中生成所需的二維表。
+        python manage.py migrate
+    2.創建訪問admin應用的超級用戶賬號，這裡需要輸入用戶名、郵箱和口令。
+        python manage.py createsuperuser
+    #說明：輸入口令時沒有回顯也不能退格，需要一氣呵成完成輸入。
+    3.運行項目，在瀏覽器中訪問http://127.0.0.1:8000/admin，輸入剛才創建的超級用戶賬號和密碼進行登錄。
+    4.註冊模型類。
+        from django.contrib import admin
+
+        from polls.models import Subject, Teacher
+
+        admin.site.register(Subject)
+        admin.site.register(Teacher)
+    5.對模型進行CRUD操作。
+    可以在管理員平台對模型進行C（新增）、R（查看）、U（更新）、D（刪除）操作，如下圖所示。
+        - 添加學科。
+        - 查看所有學科。
+        - 刪除和更新學科。
+    6.註冊模型管理類。
+    可能大家已經註意到了，剛才在後台查看部門信息的時候，顯示的部門信息並不直觀，為此我們再修改admin.py文件，通過註冊模型管理類，可以在後台管理系統中更好的管理模型。
+        from django.contrib import admin
+
+        from polls.models import Subject, Teacher
+
+
+        class SubjectModelAdmin(admin.ModelAdmin):
+            list_display = ('no', 'name', 'intro', 'is_hot')
+            search_fields = ('name', )
+            ordering = ('no', )
+
+
+        class TeacherModelAdmin(admin.ModelAdmin):
+            list_display = ('no', 'name', 'sex', 'birth', 'good_count', 'bad_count', 'subject')
+            search_fields = ('name', )
+            ordering = ('no', )
+
+
+        admin.site.register(Subject, SubjectModelAdmin)
+        admin.site.register(Teacher, TeacherModelAdmin)
+    為了更好的查看模型，我們為Subject類添加__str__魔法方法，並在該方法中返回學科名字。這樣在如上圖所示的查看老師的頁面上顯示老師所屬學科時，就不再是Subject object(1)這樣晦澀的信息，而是學科的名稱。
