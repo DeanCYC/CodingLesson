@@ -1,0 +1,25 @@
+優化ORM代碼
+在配置了日誌或Django-Debug-Toolbar之後，我們可以查看一下之前將老師數據導出成Excel報表的視圖函數執行情況，這裡我們關注的是ORM框架生成的SQL查詢到底是什麼樣子的，相信這裡的結果會讓你感到有一些意外。執行Teacher.objects.all()之後我們可以注意到，在控制台看到的或者通過Django-Debug-Toolbar輸出的SQL是下面這樣的：
+    SELECT `tb_teacher`.`no`, `tb_teacher`.`name`, `tb_teacher`.`detail`, `tb_teacher`.`photo`, `tb_teacher`.`good_count`, `tb_teacher`.`bad_count`, `tb_teacher`.`sno` FROM `tb_teacher`; args=()
+    SELECT `tb_subject`.`no`, `tb_subject`.`name`, `tb_subject`.`intro`, `tb_subject`.`create_date`, `tb_subject`.`is_hot` FROM `tb_subject` WHERE `tb_subject`.`no` = 101; args=(101,)
+    SELECT `tb_subject`.`no`, `tb_subject`.`name`, `tb_subject`.`intro`, `tb_subject`.`create_date`, `tb_subject`.`is_hot` FROM `tb_subject` WHERE `tb_subject`.`no` = 101; args=(101,)
+    SELECT `tb_subject`.`no`, `tb_subject`.`name`, `tb_subject`.`intro`, `tb_subject`.`create_date`, `tb_subject`.`is_hot` FROM `tb_subject` WHERE `tb_subject`.`no` = 101; args=(101,)
+    SELECT `tb_subject`.`no`, `tb_subject`.`name`, `tb_subject`.`intro`, `tb_subject`.`create_date`, `tb_subject`.`is_hot` FROM `tb_subject` WHERE `tb_subject`.`no` = 101; args=(101,)
+    SELECT `tb_subject`.`no`, `tb_subject`.`name`, `tb_subject`.`intro`, `tb_subject`.`create_date`, `tb_subject`.`is_hot` FROM `tb_subject` WHERE `tb_subject`.`no` = 103; args=(103,)
+    SELECT `tb_subject`.`no`, `tb_subject`.`name`, `tb_subject`.`intro`, `tb_subject`.`create_date`, `tb_subject`.`is_hot` FROM `tb_subject` WHERE `tb_subject`.`no` = 103; args=(103,)
+
+這裡的問題通常被稱為“1+N查詢”（有的地方也將其稱之為“N+1查詢”），原本獲取老師的數據只需要一條SQL，但是由於老師關聯了學科，當我們查詢到N條老師的數據時，Django的ORM框架又向數據庫發出了N條SQL去查詢老師所屬學科的信息。每條SQL執行都會有較大的開銷而且會給數據庫服務器帶來壓力，如果能夠在一條SQL中完成老師和學科的查詢肯定是更好的做法，這一點也很容易做到，相信大家已經想到怎麼做了。是的，我們可以使用連接查詢，但是在使用Django的ORM框架時如何做到這一點呢？對於多對一關聯（如投票應用中的老師和學科），我們可以使用QuerySet的用select_related()方法來加載關聯對象；而對於多對多關聯（如電商網站中的訂單和商品），我們可以使用prefetch_related()方法來加載關聯對象。
+
+在導出老師Excel報表的視圖函數中，我們可以按照下面的方式優化代碼。
+    queryset = Teacher.objects.all().select_related('subject')
+
+事實上，用ECharts生成前端報表的視圖函數中，查詢老師好評和差評數據的操作也能夠優化，因為在這個例子中，我們只需要獲取老師的姓名、好評數和差評數這三項數據，但是在默認的情況生成的SQL會查詢老師表的所有字段。可以用QuerySet的only()方法來指定需要查詢的屬性，也可以用QuerySet的defer()方法來指定暫時不需要查詢的屬性，這樣生成的SQL會通過投影操作來指定需要查詢的列，從而改善查詢性能，代碼如下所示：
+    queryset = Teacher.objects.all().only('name', 'good_count', 'bad_count')
+
+當然，如果要統計出每個學科的老師好評和差評的平均數，利用Django的ORM框架也能夠做到，代碼如下所示：
+    queryset = Teacher.objects.values('subject').annotate(good=Avg('good_count'), bad=Avg('bad_count'))
+
+這裡獲得的QuerySet中的元素是字典對象，每個字典中有三組鍵值對，分別是代表學科編號的subject、代表好評數的good和代表差評數的bad。如果想要獲得學科的名稱而不是編號，可以按照如下所示的方式調整代碼：
+    queryset = Teacher.objects.values('subject__name').annotate(good=Avg('good_count'), bad=Avg('bad_count'))
+
+可見，Django的ORM框架允許我們用面向對象的方式完成關係數據庫中的分組和聚合查詢。
