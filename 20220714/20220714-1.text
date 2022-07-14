@@ -1,0 +1,106 @@
+日誌和調試工具欄
+配置日誌
+
+項目開發階段，顯示足夠的調試信息以輔助開發人員調試代碼還是非常必要的；項目上線以後，將系統運行時出現的警告、錯誤等信息記錄下來以備相關人員了解系統運行狀況並維護代碼也是很有必要的。與此同時，採集日誌數據也是為網站做數字化運營奠定一個基礎，通過對系統運行日誌的分析，我們可以監測網站的流量以及流量分佈，同時還可以挖掘出用戶的使用習慣和行為模式。
+
+接下來，我們先看看如何通過Django的配置文件來配置日誌。 Django的日誌配置基本可以參照官方文檔再結合項目實際需求來進行，這些內容基本上可以從官方文檔上複製下來，然後進行局部的調整即可，下面給出一些參考配置。
+    LOGGING = {
+        'version': 1,
+        # 是否禁用已經存在的日誌器
+        'disable_existing_loggers': False,
+        # 日誌格式化器
+        'formatters': {
+            'simple': {
+                'format': '%(asctime)s %(module)s.%(funcName)s: %(message)s',
+                'datefmt': '%Y-%m-%d %H:%M:%S',
+            },
+            'verbose': {
+                'format': '%(asctime)s %(levelname)s [%(process)d-%(threadName)s] '
+                        '%(module)s.%(funcName)s line %(lineno)d: %(message)s',
+                'datefmt': '%Y-%m-%d %H:%M:%S',
+            }
+        },
+        # 日誌過濾器
+        'filters': {
+            # 只有在Django配置文件中DEBUG值為True時才起作用
+            'require_debug_true': {
+                '()': 'django.utils.log.RequireDebugTrue',
+            },
+        },
+        # 日誌處理器
+        'handlers': {
+            # 輸出到控制台
+            'console': {
+                'class': 'logging.StreamHandler',
+                'level': 'DEBUG',
+                'filters': ['require_debug_true'],
+                'formatter': 'simple',
+            },
+            # 輸出到文件(每週切割一次)
+            'file1': {
+                'class': 'logging.handlers.TimedRotatingFileHandler',
+                'filename': 'access.log',
+                'when': 'W0',
+                'backupCount': 12,
+                'formatter': 'simple',
+                'level': 'INFO',
+            },
+            # 輸出到文件(每天切割一次)
+            'file2': {
+                'class': 'logging.handlers.TimedRotatingFileHandler',
+                'filename': 'error.log',
+                'when': 'D',
+                'backupCount': 31,
+                'formatter': 'verbose',
+                'level': 'WARNING',
+            },
+        },
+        # 日誌器記錄器
+        'loggers': {
+            'django': {
+                # 需要使用的日誌處理器
+                'handlers': ['console', 'file1', 'file2'],
+                # 是否向上傳播日誌信息
+                'propagate': True,
+                # 日誌級別(不一定是最終的日誌級別)
+                'level': 'DEBUG',
+            },
+        }
+    }
+
+大家可能已經註意到了，上面日誌配置中的formatters是日誌格式化器，它代表瞭如何格式化輸出日誌，其中格式佔位符分別表示：
+    1.%(name)s - 記錄器的名稱
+    2.%(levelno)s - 數字形式的日誌記錄級別
+    3.%(levelname)s - 日誌記錄級別的文本名稱
+    4.%(filename)s - 執行日誌記錄調用的源文件的文件名稱
+    5.%(pathname)s - 執行日誌記錄調用的源文件的路徑名稱
+    6.%(funcName)s - 執行日誌記錄調用的函數名稱
+    7.%(module)s - 執行日誌記錄調用的模塊名稱
+    8.%(lineno)s - 執行日誌記錄調用的行號
+    9.%(created)s - 執行日誌記錄的時間
+    10.%(asctime)s - 日期和時間
+    11.%(msecs)s - 毫秒部分
+    12.%(thread)d - 線程ID（整數）
+    13.%(threadName)s - 線程名稱
+    14.%(process)d - 進程ID （整數）
+
+日誌配置中的handlers用來指定日誌處理器，簡單的說就是指定將日誌輸出到控制台還是文件又或者是網絡上的服務器，可用的處理器包括：
+    1.logging.StreamHandler(stream=None) - 可以向類似與sys.stdout或者sys.stderr的任何文件對象輸出信息
+    2.logging.FileHandler(filename, mode='a', encoding=None, delay=False) - 將日誌消息寫入文件
+    3.logging.handlers.DatagramHandler(host, port) - 使用UDP協議，將日誌信息發送到指定主機和端口的網絡主機上
+    4.logging.handlers.HTTPHandler(host, url) - 使用HTTP的GET或POST方法將日誌消息上傳到一台HTTP 服務器
+    5.logging.handlers.RotatingFileHandler(filename, mode='a', maxBytes=0, backupCount=0, encoding=None, delay=False) - 將日誌消息寫入文件，如果文件的大小超出maxBytes指定的值，那麼將重新生成一個文件來記錄日誌
+    6.logging.handlers.SocketHandler(host, port) - 使用TCP協議，將日誌信息發送到指定主機和端口的網絡主機上
+    7.logging.handlers.SMTPHandler(mailhost, fromaddr, toaddrs, subject, credentials=None, secure=None, timeout=1.0) - 將日誌輸出到指定的郵件地址
+    8.logging.MemoryHandler(capacity, flushLevel=ERROR, target=None, flushOnClose=True) - 將日誌輸出到內存指定的緩衝區中
+
+上面每個日誌處理器都指定了一個名為level的屬性，它代表了日誌的級別，不同的日誌級別反映出日誌中記錄信息的嚴重性。 Python中定義了六個級別的日誌，按照從低到高的順序依次是：NOTSET、DEBUG、INFO、WARNING、ERROR、CRITICAL。
+
+最後配置的日誌記錄器是用來真正輸出日誌的，Django框架提供瞭如下所示的內置記錄器：
+    1.django - 在Django層次結構中的所有消息記錄器
+    2.django.request - 與請求處理相關的日誌消息。 5xx響應被視為錯誤消息；4xx響應被視為為警告消息
+    3.django.server - 與通過runserver調用的服務器所接收的請求相關的日誌消息。 5xx響應被視為錯誤消息；4xx響應被記錄為警告消息；其他一切都被記錄為INFO
+    4.django.template - 與模板渲染相關的日誌消息
+    5.django.db.backends - 有與數據庫交互產生的日誌消息，如果希望顯示ORM框架執行的SQL語句，就可以使用該日誌記錄器。
+
+日誌記錄器中配置的日誌級別有可能不是最終的日誌級別，因為還要參考日誌處理器中配置的日誌級別，取二者中級別較高者作為最終的日誌級別。
