@@ -1,0 +1,120 @@
+深入模型
+在上一個章節中，我們提到了Django是基於MVC架構的Web框架，MVC架構追求的是“模型”和“視圖”的解耦合。所謂“模型”說得更直白一些就是數據（的表示），所以通常也被稱作“數據模型”。在實際的項目中，數據模型通常通過數據庫實現持久化操作，而關係型數據庫在過去和當下都是持久化的首選方案，下面我們通過完成一個投票項目來講解和模型相關的知識點。投票項目的首頁會展示某在線教育平台所有的學科；點擊學科可以查看到該學科的老師及其信息；用戶登錄後在查看老師的頁面為老師投票，可以投贊成票和反對票；未登錄的用戶可以通過登錄頁進行登錄；尚未註冊的用戶可以通過註冊頁輸入個人信息進行註冊。在這個項目中，我們使用MySQL數據庫來實現數據持久化操作。
+
+創建項目和應用
+我們首先創建Django項目vote並為其添加虛擬環境和依賴項。接下來，在項目下創建名為polls的應用和保存模板頁的文件夾tempaltes。
+根據上面描述的項目需求，我們準備了四個靜態頁面，分別是展示學科的頁面subjects.html，顯示學科老師的頁面teachers.html，登錄頁面login.html，註冊頁面register.html，稍後我們會將靜態頁修改為Django項目所需的模板頁。
+
+配置關係型數據庫MySQL
+1.在MySQL中創建數據庫，創建用戶，授權用戶訪問該數據庫。
+    create database vote default charset utf8;
+    create user 'hellokitty'@'%' identified by 'Hellokitty.618';
+    grant all privileges on vote.* to 'hellokitty'@'%';
+    flush privileges;
+
+2.在MySQL中創建保存學科和老師信息的二維表（保存用戶信息的表稍後處理）。
+    use vote;
+
+    -- 創建學科表
+    create table `tb_subject`
+    (
+        `no` integer auto_increment comment '學科編號',
+        `name` varchar(50) not null comment '學科名稱',
+        `intro` varchar(1000) not null default '' comment '學科介紹',
+        `is_hot` boolean not null default 0 comment '是不是熱門學科',
+        primary key (`no`)
+    );
+    -- 創建老師表
+    create table `tb_teacher`
+    (
+        `no` integer auto_increment comment '老師編號',
+        `name` varchar(20) not null comment '老師姓名',
+        `sex` boolean not null default 1 comment '老師性別',
+        `birth` date not null comment '出生日期',
+        `intro` varchar(1000) not null default '' comment '老師介紹',
+        `photo` varchar(255) not null default '' comment '老師照片',
+        `gcount` integer not null default 0 comment '好評數',
+        `bcount` integer not null default 0 comment '差評數',
+        `sno` integer not null comment '所屬學科',
+        primary key (`no`),
+        foreign key (`sno`) references `tb_subject` (`no`)
+    );
+
+3.在虛擬環境中安裝連接MySQL數據庫所需的依賴項。
+    pip install mysqlclient
+#說明：如果因為某些原因無法安裝mysqlclient三方庫，可以使用它的替代品pymysql，pymysql是用純Python開發的連接MySQL的Python庫，安裝更容易成功，但是需要在Django項目文件夾的__init__.py中添加如下所示的代碼。
+        import pymysql
+
+        pymysql.install_as_MySQLdb()
+      如果使用Django 2.2及以上版本，還會遇到PyMySQL跟Django框架的兼容性問題，兼容性問題會導致項目無法運行，需要按照GitHub上PyMySQL倉庫Issues中提供的方法進行處理。總體來說，使用pymysql會比較麻煩，強烈建議大家首選安裝mysqlclient。
+
+4.修改項目的settings.py文件，首先將我們創建的應用polls添加已安裝的項目（INSTALLED_APPS）中，然後配置MySQL作為持久化方案。
+    INSTALLED_APPS = [
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        'polls',
+    ]
+
+    DATABASES = {
+        'default': {
+            # 數據庫引擎配置
+            'ENGINE': 'django.db.backends.mysql',
+            # 數據庫的名字
+            'NAME': 'vote',
+            # 數據庫服務器的IP地址（本機可以寫localhost或127.0.0.1）
+            'HOST': 'localhost',
+            # 啟動MySQL服務的端口號
+            'PORT': 3306,
+            # 數據庫用戶名和口令
+            'USER': 'hellokitty',
+            'PASSWORD': 'Hellokitty.618',
+            # 數據庫使用的字符集
+            'CHARSET': 'utf8',
+            # 數據庫時間日期的時區設定
+            'TIME_ZONE': 'Asia/Chongqing',
+        }
+    }
+    在配置ENGINE屬性時，常用的可選值包括：
+    'django.db.backends.sqlite3'：SQLite嵌入式數據庫。
+    'django.db.backends.postgresql'：BSD許可證下發行的開源關係型數據庫產品。
+    'django.db.backends.mysql'：甲骨文公司經濟高效的數據庫產品。
+    'django.db.backends.oracle'：甲骨文公司關係型數據庫旗艦產品。
+    其他的配置可以參考官方文檔中數據庫配置的部分。
+
+5.Django框架提供了ORM來解決數據持久化問題，ORM翻譯成中文叫“對象關係映射”。因為Python是面向對象的編程語言，我們在Python程序中使用對像模型來保存數據，而關係型數據庫使用關係模型，用二維表來保存數據，這兩種模型並不匹配。使用ORM是為了實現對像模型到關係模型的雙向轉換，這樣就不用在Python代碼中書寫SQL語句和游標操作，因為這些都會由ORM自動完成。利用Django的ORM，我們可以直接將剛才創建的學科表和老師表變成Django中的模型類。
+    python manage.py inspectdb > polls/models.py
+
+我們可以對自動生成的模型類稍作調整，代碼如下所示。
+    from django.db import models
+
+
+    class Subject(models.Model):
+        no = models.AutoField(primary_key=True, verbose_name='編號')
+        name = models.CharField(max_length=50, verbose_name='名稱')
+        intro = models.CharField(max_length=1000, verbose_name='介紹')
+        is_hot = models.BooleanField(verbose_name='是否熱門')
+
+        class Meta:
+            managed = False
+            db_table = 'tb_subject'
+
+
+    class Teacher(models.Model):
+        no = models.AutoField(primary_key=True, verbose_name='編號')
+        name = models.CharField(max_length=20, verbose_name='姓名')
+        sex = models.BooleanField(default=True, verbose_name='性別')
+        birth = models.DateField(verbose_name='出生日期')
+        intro = models.CharField(max_length=1000, verbose_name='個人介紹')
+        photo = models.ImageField(max_length=255, verbose_name='照片')
+        good_count = models.IntegerField(default=0, db_column='gcount', verbose_name='好評數')
+        bad_count = models.IntegerField(default=0, db_column='bcount', verbose_name='差評數')
+        subject = models.ForeignKey(Subject, models.DO_NOTHING, db_column='sno')
+
+        class Meta:
+            managed = False
+            db_table = 'tb_teacher'
+說明：模型類都直接或間接繼承自Model類，模型類跟關係型數據庫的二維表對應，模型對象跟表中的記錄對應，模型對象的屬性跟表中的字段對應。如果對上面模型類的屬性定義不是特別理解，可以看看本文後面提供的“模型定義參考”部分的內容。
