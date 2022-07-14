@@ -1,0 +1,114 @@
+補充內容
+Django模型最佳實踐
+1.正確的為模型和關係字段命名。
+2.設置適當的related_name屬性。
+3.用OneToOneField代替ForeignKeyField(unique=True)。
+4.通過“遷移操作”（migrate）來添加模型。
+5.用NoSQL來應對需要降低範式級別的場景。
+6.如果布爾類型可以為空要使用NullBooleanField。
+7.在模型中放置業務邏輯。
+8.用<ModelName>.DoesNotExists取代ObjectDoesNotExists。
+9.在數據庫中不要出現無效數據。
+10.不要對QuerySet調用len()函數。
+11.將QuerySet的exists()方法的返回值用於if條件。
+12.用DecimalField來存儲貨幣相關數據而不是FloatField。
+13.定義__str__方法。
+14.不要將數據文件放在同一個目錄中。
+#說明：以上內容來自於STEELKIWI網站的Best Practice working with Django models in Python，有興趣的小伙伴可以閱讀原文。
+
+模型定義參考
+
+字段
+對字段名稱的限制
+    > 字段名不能是Python的保留字，否則會導致語法錯誤
+    > 字段名不能有多個連續下劃線，否則影響ORM查詢操作
+
+Django模型字段類
+字段類	                 說明
+AutoField	            自增ID字段
+BigIntegerField	        64位有符號整數
+BinaryField	            存儲二進制數據的字段，對應Python的bytes類型
+BooleanField	        存儲True或False
+CharField	            長度較小的字符串
+DateField	            存儲日期，有auto_now和auto_now_add屬性
+DateTimeField	        存儲日期和日期，兩個附加屬性同上
+DecimalField	        存儲固定精度小數，有max_digits（有效位數）和decimal_places（小數點後面）兩個必要的參數
+DurationField	        存儲時間跨度
+EmailField	            與CharField相同，可以用EmailValidator驗證
+FileField	            文件上傳字段
+FloatField	            存儲浮點數
+ImageField	            其他同FileFiled，要驗證上傳的是不是有效圖像
+IntegerField	        存儲32位有符號整數。
+GenericIPAddressField	存儲IPv4或IPv6地址
+NullBooleanField	    存儲True、False或null值
+PositiveIntegerField	存儲無符號整數（只能存儲正數）
+SlugField	            存儲slug（簡短標註）
+SmallIntegerField	    存儲16位有符號整數
+TextField	            存儲數據量較大的文本
+TimeField	            存儲時間
+URLField	            存儲URL的CharField
+UUIDField	            存儲全局唯一標識符
+
+字段屬性
+通用字段屬性
+選項	         說明
+null	        數據庫中對應的字段是否允許為NULL，默認為False
+blank	        後台模型管理驗證數據時，是否允許為NULL，默認為False
+choices	        設定字段的選項，各元組中的第一個值是設置在模型上的值，第二值是人類可讀的值
+db_column	    字段對應到數據庫表中的列名，未指定時直接使用字段的名稱
+db_index	    設置為True時將在該字段創建索引
+db_tablespace   為有索引的字段設置使用的表空間，默認為DEFAULT_INDEX_TABLESPACE
+default	        字段的默認值
+editable	    字段在後台模型管理或ModelForm中是否顯示，默認為True
+error_messages	設定字段拋出異常時的默認消息的字典，其中的鍵包括null、blank、invalid、invalid_choice、unique和unique_for_date
+help_text	    表單小組件旁邊顯示的額外的幫助文本。
+primary_key	    將字段指定為模型的主鍵，未指定時會自動添加AutoField用於主鍵，只讀。
+unique	        設置為True時，表中字段的值必須是唯一的
+verbose_name	字段在後台模型管理顯示的名稱，未指定時使用字段的名稱
+
+ForeignKey屬性
+    1.limit_choices_to：值是一個Q對像或返回一個Q對象，用於限制後台顯示哪些對象。
+    2.related_name：用於獲取關聯對象的關聯管理器對象（反向查詢），如果不允許反向，該屬性應該被設置為'+'，或者以'+'結尾。
+    3.to_field：指定關聯的字段，默認關聯對象的主鍵字段。
+    4.db_constraint：是否為外鍵創建約束，默認值為True。
+    5.on_delete：外鍵關聯的對像被刪除時對應的動作，可取的值包括django.db.models中定義的：
+        -CASCADE：級聯刪除。
+        -PROTECT：拋出ProtectedError異常，阻止刪除引用的對象。
+        -SET_NULL：把外鍵設置為null，當null屬性被設置為True時才能這麼做。
+        -SET_DEFAULT：把外鍵設置為默認值，提供了默認值才能這麼做。
+
+ManyToManyField屬性
+    1.symmetrical：是否建立對稱的多對多關係。
+    2.through：指定維持多對多關係的中間表的Django模型。
+    3.throughfields：定義了中間模型時可以指定建立多對多關係的字段。
+    4.db_table：指定維持多對多關係的中間表的表名。
+
+模型元數據選項
+選項                     說明
+abstract	            設置為True時模型是抽象父類
+app_label	            如果定義模型的應用不在INSTALLED_APPS中可以用該屬性指定
+db_table	            模型使用的數據表名稱
+db_tablespace	        模型使用的數據表空間
+default_related_name	關聯對象回指這個模型時默認使用的名稱，默認為<model_name>_set
+get_latest_by	        模型中可排序字段的名稱。
+managed	                設置為True時，Django在遷移中創建數據表並在執行flush管理命令時把表移除
+order_with_respect_to	標記對象為可排序的
+ordering	            對象的默認排序
+permissions	            創建對象時寫入權限表的額外權限
+default_permissions	    默認為('add', 'change', 'delete')
+unique_together	        設定組合在一起時必須獨一無二的字段名
+index_together	        設定一起建立索引的多個字段名
+verbose_name	        為對象設定人類可讀的名稱
+verbose_name_plural	    設定對象的複數名稱
+
+查詢參考
+按字段查找可以用的條件
+    1.exact / iexact：精確匹配/忽略大小寫的精確匹配查詢
+    2.contains / icontains / startswith / istartswith / endswith / iendswith：基於like的模糊查詢
+    3.in ：集合運算
+    4.gt / gte / lt / lte：大於/大於等於/小於/小於等於關係運算
+    5.range：指定範圍查詢（SQL中的between…and…）
+    6.year / month / day / week_day / hour / minute / second：查詢時間日期
+    7.isnull：查詢空值（True）或非空值（False）
+    8.search：基於全文索引的全文檢索（一般很少使用）
+    9.regex / iregex：基於正則表達式的模糊匹配查詢
