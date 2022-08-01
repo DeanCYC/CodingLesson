@@ -1,0 +1,43 @@
+數據分頁
+在使用GET請求獲取資源列表時，我們通常不會一次性的加載所有的數據，除非數據量真的很小。大多數獲取資源列表的操作都支持數據分頁展示，也就說我們可以通過指定頁碼（或類似於頁碼的標識）和頁面大小（一次加載多少條數據）來獲取不同的數據。我們可以通過對QuerySet對象的切片操作來實現分頁，也可以利用Django框架封裝的Paginator和Page對象來實現分頁。使用DRF時，可以在Django配置文件中修改REST_FRAMEWORK並配置默認的分頁類和頁面大小來實現分頁，如下所示。
+    REST_FRAMEWORK = {
+        'PAGE_SIZE': 10,
+        'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination'
+    }
+
+除了上面配置的PageNumberPagination分頁器之外，DRF還提供了LimitOffsetPagination和CursorPagination分頁器，值得一提的是CursorPagination，它可以避免使用頁碼分頁時暴露網站的數據體量，有興趣的讀者可以自行了解。如果不希望使用配置文件中默認的分頁設定，可以在視圖類中添加一個pagination_class屬性來重新指定分頁器，通常可以將該屬性指定為自定義的分頁器，如下所示。
+    from rest_framework.pagination import PageNumberPagination
+
+
+    class CustomizedPagination(PageNumberPagination):
+        # 默認頁面大小
+        page_size = 5
+        # 頁面大小對應的查詢參數
+        page_size_query_param = 'size'
+        # 頁面大小的最大值
+        max_page_size = 50
+    class SubjectView(ListAPIView):
+        # 指定如何獲取數據
+        queryset = Subject.objects.all()
+        # 指定如何序列化數據
+        serializer_class = SubjectSerializer
+        # 指定如何分頁
+        pagination_class = CustomizedPagination
+
+如果不希望數據分頁，可以將pagination_class屬性設置為None來取消默認的分頁器。
+
+數據篩選
+如果希望使用CBV定制獲取老師信息的數據接口，也可以通過繼承ListAPIView來實現。但是因為要通過指定的學科來獲取對應的老師信息，因此需要對老師數據進行篩選而不是直接獲取所有老師的數據。如果想從請求中獲取學科編號並通過學科編號對老師進行篩選，可以通過重寫get_queryset方法來做到，代碼如下所示。
+    class TeacherView(ListAPIView):
+        serializer_class = TeacherSerializer
+
+        def get_queryset(self):
+            queryset = Teacher.objects.defer('subject')
+            try:
+                sno = self.request.GET.get('sno', '')
+                queryset = queryset.filter(subject__no=sno)
+                return queryset
+            except ValueError:
+                raise Http404('No teachers found.')
+
+除了上述方式之外，還可以使用三方庫django-filter來配合DRF實現對數據的篩選，使用django-filter後，可以通過為視圖類配置filter-backends屬性並指定使用DjangoFilterBackend來支持數據篩選。在完成上述配置後，可以使用filter_fields 屬性或filterset_class屬性來指定如何篩選數據，有興趣的讀者可以自行研究。
