@@ -1,0 +1,67 @@
+網絡數據採集概述
+爬蟲（crawler）也經常被稱為網絡蜘蛛（spider），是按照一定的規則自動瀏覽網站並獲取所需信息的機器人程序（自動化腳本代碼），被廣泛的應用於互聯網搜索引擎和數據採集。使用過互聯網和瀏覽器的人都知道，網頁中除了供用戶閱讀的文字信息之外，還包含一些超鏈接，網絡爬蟲正是通過網頁中的超鏈接信息，不斷獲得網絡上其它頁面的地址，然後持續的進行數據採集。正因如此，網絡數據採集的過程就像一個爬蟲或者蜘蛛在網絡上漫遊，所以才被形象的稱為爬蟲或者網絡蜘蛛。
+
+爬蟲的應用領域
+在理想的狀態下，所有 ICP（Internet Content Provider）都應該為自己的網站提供 API 接口來共享它們允許其他程序獲取的數據，在這種情況下就根本不需要爬蟲程序。國內比較有名的電商平台（如淘寶、京東等）、社交平台（如微博、微信等）等都提供了自己的 API 接口，但是這類 API 接口通常會對可以抓取的數據以及抓取數據的頻率進行限制。對於大多數的公司而言，及時的獲取行業數據和競對數據是企業生存的重要環節之一，然而對大部分企業來說，數據都是其與生俱來的短板。在這種情況下，合理的利用爬蟲來獲取數據並從中提取出有商業價值的信息對這些企業來說就顯得至關重要的。
+
+爬蟲的應用領域其實非常廣泛，下面我們列舉了其中的一部分，有興趣的讀者可以自行探索相關內容。
+    1.搜索引擎
+    2.新聞聚合
+    3.社交應用
+    4.輿情監控
+    5.行業數據
+
+爬蟲合法性探討
+經常聽人說起“爬蟲寫得好，牢飯吃到飽”，那麼編程爬蟲程序是否違法呢？關於這個問題，我們可以從以下幾個角度進行解讀。
+    1.網絡爬蟲這個領域目前還屬於拓荒階段，雖然互聯網世界已經通過自己的遊戲規則建立起了一定的道德規範，即 Robots 協議（全稱是“網絡爬蟲排除標準”），但法律部分還在建立和完善中，也就是說，現在這個領域暫時還是灰色地帶。
+    2.“法不禁止即為許可”，如果爬蟲就像瀏覽器一樣獲取的是前端顯示的數據（網頁上的公開信息）而不是網站後台的私密敏感信息，就不太擔心法律法規的約束，因為目前大數據產業鏈的發展速度遠遠超過了法律的完善程度。
+    3.在爬取網站的時候，需要限制自己的爬蟲遵守 Robots 協議，同時控製網絡爬蟲程序的抓取數據的速度；在使用數據的時候，必須要尊重網站的知識產權（從Web 2.0時代開始，雖然Web上的數據很多都是由用戶提供的，但是網站平台是投入了運營成本的，當用戶在註冊和發佈內容時，平台通常就已經獲得了對數據的所有權、使用權和分發權）。如果違反了這些規定，在打官司的時候敗訴機率相當高。
+    4.適當的隱匿自己的身份在編寫爬蟲程序時必要的，而且最好不要被對方舉證你的爬蟲有破壞別人動產（例如服務器）的行為。
+    5.不要在公網（如代碼託管平台）上去開源或者展示你的爬蟲代碼，這些行為通常會給自己帶來不必要的麻煩。
+
+Robots協議
+大多數網站都會定義robots.txt文件，這是一個君子協議，並不是所有爬蟲都必須遵守的遊戲規則。下面以淘寶的robots.txt文件為例，看看淘寶網對爬蟲有哪些限制。
+    User-agent: Baiduspider
+    Disallow: /
+
+    User-agent: baiduspider
+    Disallow: /
+
+通過上面的文件可以看出，淘寶禁止百度爬蟲爬取它任何資源，因此當你在百度搜索“淘寶”的時候，搜索結果下方會出現：“由於該網站的robots.txt文件存在限制指令（限制搜索引擎抓取），系統無法提供該頁面的內容描述”。百度作為一個搜索引擎，至少在表面上遵守了淘寶網的robots.txt協議，所以用戶不能從百度上搜索到淘寶內部的產品信息。
+圖1. 百度搜索淘寶的結果
+
+下面是豆瓣網的robots.txt文件，大家可以自行解讀，看看它做出了什麼樣的限制。
+    User-agent: *
+    Disallow: /subject_search
+    Disallow: /amazon_search
+    Disallow: /search
+    Disallow: /group/search
+    Disallow: /event/search
+    Disallow: /celebrities/search
+    Disallow: /location/drama/search
+    Disallow: /forum/
+    Disallow: /new_subject
+    Disallow: /service/iframe
+    Disallow: /j/
+    Disallow: /link2/
+    Disallow: /recommend/
+    Disallow: /doubanapp/card
+    Disallow: /update/topic/
+    Disallow: /share/
+    Allow: /ads.txt
+    Sitemap: https://www.douban.com/sitemap_index.xml
+    Sitemap: https://www.douban.com/sitemap_updated_index.xml
+    # Crawl-delay: 5
+
+    User-agent: Wandoujia Spider
+    Disallow: /
+
+    User-agent: Mediapartners-Google
+    Disallow: /subject_search
+    Disallow: /amazon_search
+    Disallow: /search
+    Disallow: /group/search
+    Disallow: /event/search
+    Disallow: /celebrities/search
+    Disallow: /location/drama/search
+    Disallow: /j/
