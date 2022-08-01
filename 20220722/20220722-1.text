@@ -1,0 +1,82 @@
+使用緩存
+通常情況下，Web應用的性能瓶頸都會出現在關係型數據庫上，當並發訪問量較大時，如果所有的請求都需要通過關係型數據庫完成數據持久化操作，那麼數據庫一定會不堪重負。優化Web應用性能最為重要的一點就是使用緩存，把那些數據體量不大但訪問頻率非常高的數據提前加載到緩存服務器中，這又是典型的空間換時間的方法。通常緩存服務器都是直接將數據置於內存中而且使用了非常高效的數據存取策略（哈希存儲、鍵值對方式等），在讀寫性能上遠遠優於關係型數據庫的，因此我們可以讓Web應用接入緩存服務器來優化其性能，其中一個非常好的選擇就是使用Redis。
+
+Django項目接入Redis
+在此前的課程中，我們介紹過Redis的安裝和使用，此處不再進行贅述。如果需要在Django項目中接入Redis，可以使用三方庫django-redis，這個三方庫又依賴了一個名為redis 的三方庫，它封裝了對Redis的各種操作。
+
+安裝django-redis。
+    pip install django-redis
+
+修改Django配置文件中關於緩存的配置。
+    CACHES = {
+        'default': {
+            # 指定通過django-redis接入Redis服務
+            'BACKEND': 'django_redis.cache.RedisCache',
+            # Redis服務器的URL
+            'LOCATION': ['redis://1.2.3.4:6379/0', ],
+            # Redis中鍵的前綴（解決命名衝突）
+            'KEY_PREFIX': 'vote',
+            # 其他的配置選項
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                # 連接池（預置若干備用的Redis連接）參數
+                'CONNECTION_POOL_KWARGS': {
+                    # 最大連接數
+                    'max_connections': 512,
+                },
+                # 連接Redis的用戶口令
+                'PASSWORD': 'foobared',
+            }
+        },
+    }
+
+至此，我們的Django項目已經可以接入Redis，接下來我們修改項目代碼，用Redis為之寫的獲取學科數據的接口提供緩存服務。
+
+為視圖提供緩存服務
+聲明式緩存
+所謂聲明式緩存是指不修改原來的代碼，通過Python中的裝飾器（代理）為原有的代碼增加緩存功能。對於FBV，代碼如下所示。
+    from django.views.decorators.cache import cache_page
+
+
+    @api_view(('GET', ))
+    @cache_page(timeout=86400, cache='default')
+    def show_subjects(request):
+        """獲取學科數據"""
+        queryset = Subject.objects.all()
+        data = SubjectSerializer(queryset, many=True).data
+        return Response({'code': 20000, 'subjects': data})
+
+上面的代碼通過Django封裝的cache_page裝飾器緩存了視圖函數的返回值（響應對象），cache_page的本意是緩存視圖函數渲染的頁面，對於返回JSON數據的視圖函數，相當於是緩存了JSON數據。在使用cache_page裝飾器時，可以傳入timeout參數來指定緩存過期時間，還可以使用cache參數來指定需要使用哪一組緩存服務來緩存數據。 Django項目允許在配置文件中配置多組緩存服務，上面的cache='default'指定了使用默認的緩存服務（因為之前的配置文件中我們也只配置了名為default的緩存服務）。視圖函數的返回值會被序列化成字節串放到Redis中（Redis中的str類型可以接收字節串），緩存數據的序列化和反序列化也不需要我們自己處理，因為cache_page裝飾器會調用django-redis庫中的RedisCache來對接Redis，該類使用了DefaultClient來連接Redis並使用了pickle序列化，django_redis.serializers.pickle.PickleSerializer是默認的序列化類。
+
+如果緩存中沒有學科的數據，那麼通過接口訪問學科數據時，我們的視圖函數會通過執行Subject.objects.all()向數據庫發出SQL語句來獲得數據，視圖函數的返回值會被緩存，因此下次請求該視圖函數如果緩存沒有過期，可以直接從緩存中獲取視圖函數的返回值，無需再次查詢數據庫。如果想了解緩存的使用情況，可以配置數據庫日誌或者使用Django-Debug-Toolbar來查看，第一次訪問學科數據接口時會看到查詢學科數據的SQL語句，再次獲取學科數據時，不會再向數據庫發出SQL語句，因為可以直接從緩存中獲取數據。
+
+對於CBV，可以利用Django中名為method_decorator的裝飾器將cache_page這個裝飾函數的裝飾器放到類中的方法上，效果跟上面的代碼是一樣的。需要提醒大家注意的是，cache_page裝飾器不能直接放在類上，因為它是裝飾函數的裝飾器，所以Django框架才提供了method_decorator來解決這個問題，很顯然，method_decorator是一個裝飾類的裝飾器。
+    from django.utils.decorators import method_decorator
+    from django.views.decorators.cache import cache_page
+
+
+    @method_decorator(decorator=cache_page(timeout=86400, cache='default'), name='get')
+    class SubjectView(ListAPIView):
+        """獲取學科數據的視圖類"""
+        queryset = Subject.objects.all()
+        serializer_class = SubjectSerializer
+
+編程式緩存
+所謂編程式緩存是指通過自己編寫的代碼來使用緩存服務，這種方式雖然代碼量會稍微大一些，但是相較於聲明式緩存，它對緩存的操作和使用更加靈活，在實際開發中使用得更多。下面的代碼去掉了之前使用的cache_page裝飾器，通過django-redis提供的get_redis_connection函數直接獲取Redis連接來操作Redis。
+    def show_subjects(request):
+        """獲取學科數據"""
+        redis_cli = get_redis_connection()
+        # 先嘗試從緩存中獲取學科數據
+        data = redis_cli.get('vote:polls:subjects')
+        if data:
+            # 如果獲取到學科數據就進行反序列化操作
+            data = json.loads(data)
+        else:
+            # 如果緩存中沒有獲取到學科數據就查詢數據庫
+            queryset = Subject.objects.all()
+            data = SubjectSerializer(queryset, many=True).data
+            # 將查到的學科數據序列化後放到緩存中
+            redis_cli.set('vote:polls:subjects', json.dumps(data), ex=86400)
+        return Response({'code': 20000, 'subjects': data})
+        
+需要說明的是，Django框架提供了cache和caches兩個現成的變量來支持緩存操作，前者訪問的是默認的緩存（名為default的緩存），後者可以通過索引運算獲取指定的緩存服務（例如：caches['default']）。向cache對象發送get和set消息就可以實現對緩存的讀和寫操作，但是這種方式能做的操作有限，不如上面代碼中使用的方式靈活。還有一個值得注意的地方，由於可以通過get_redis_connection函數獲得的Redis連接對象向Redis發起各種操作，包括FLUSHDB、SHUTDOWN等危險的操作，所以在實際商業項目開發中，一般都會對django-redis再做一次封裝，例如封裝一個工具類，其中只提供了項目需要用到的緩存操作的方法，從而避免了直接使用get_redis_connection的潛在風險。當然，自己封裝對緩存的操作還可以使用“Read Through”和“Write Through”的方式實現對緩存的更新，這個在下面會介紹到。
