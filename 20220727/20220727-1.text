@@ -1,0 +1,67 @@
+接入雲存儲服務
+當我們提到雲存儲這個詞的時候，通常是指把數據存放在由第三方提供的虛擬服務器環境下，簡單的說就是將某些數據或資源通過第三平台託管。一般情況下，提供雲存儲服務的公司都運營著大型的數據中心，需要雲存儲服務的個人或組織通過向其購買或租賃存儲空間來滿足數據存儲的需求。在開發Web應用時，可以將靜態資源，尤其是用戶上傳的靜態資源直接置於雲存儲服務中，雲存儲通常會提供對應的URL使得用戶可以訪問該靜態資源。國內外比較有名的雲存儲服務（如：亞馬遜的S3、阿里的OSS2等）一般都物美價廉，相比自己架設靜態資源服務器，雲存儲的代價更小，而且一般的雲存儲平台都提供了CDN服務，用於加速對靜態資源的訪問，所以不管從哪個角度出發，使用雲存儲的方式管理Web應用的數據和靜態資源都是非常好的選擇，除非這些資源涉及到個人或商業隱私，否則就可以託管到雲存儲中。
+
+下面我們以接入七牛雲為例，講解如何實現將用戶上傳的文件保存到七牛雲存儲。七牛雲是國內知名的雲計算及數據服務提供商，七牛雲在海量文件存儲、CDN、視頻點播、互動直播以及大規模異構數據的智能分析與處理等領域都有自己的產品，而且非付費用戶也可以免費接入，使用其提供的服務。下面是接入七牛雲的流程：
+1.註冊賬號，登錄管理控制台。
+2.選擇左側菜單中的對象存儲。
+3.在空間管理中選擇新建空間（例如：myvote），如果提示空間名稱已被佔用，更換一個再嘗試即可。注意，創建空間後會提示綁定自定義域名，如果暫時還沒有自己的域名，可以使用七牛雲提供的臨時域名，但是臨時域名會在30天后被回收，所以最好準備自己的域名（域名需要備案，不清楚如何操作的請自行查閱相關資料）。
+4.在網頁的右上角點擊個人頭像中的“密鑰管理”，查看自己的密鑰，稍後在代碼中需要使用AK（AccessKey）和SK（SecretKey）兩個密鑰來認證用戶身份。
+5.點擊網頁上方菜單中的“文檔”，進入到七牛開發者中心，選擇導航菜單中的“SDK&工具”並點擊“官方SDK”子菜單，找到Python（服務端）並點擊“文檔”查看官方文檔。
+
+接下來，只要安裝官方文檔提供的示例，就可以接入七牛雲，使用七牛雲提供的雲存儲以及其他服務。首先可以通過下面的命令安裝七牛雲的三方庫。
+    pip install qiniu
+接下來可以通過qiniu模塊中的put_file和put_stream兩個函數實現文件上傳，前者可以上傳指定路徑的文件，後者可以將內存中的二進制數據上傳至七牛雲，具體的代碼如下所示。
+    import qiniu
+
+    AUTH = qiniu.Auth('密鑰管理中的AccessKey', '密鑰管理中的SecretKey')
+    BUCKET_NAME = 'myvote'
+
+
+    def upload_file_to_qiniu(key, file_path):
+        """上傳指定路徑的文件到七牛雲"""
+        token = AUTH.upload_token(BUCKET_NAME, key)
+        return qiniu.put_file(token, key, file_path)
+
+
+    def upload_stream_to_qiniu(key, stream, size):
+        """上傳二進制數據流到七牛雲"""
+        token = AUTH.upload_token(BUCKET_NAME, key)
+        return qiniu.put_stream(token, key, stream, None, size)
+
+下面是一個文件上傳的簡單前端頁。
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>上傳文件</title>
+    </head>
+    <body>
+        <form action="/upload/" method="post" enctype="multipart/form-data">
+            <div>
+                <input type="file" name="photo">
+                <input type="submit" value="上傳">
+            </div>
+        </form>
+    </body>
+    </html>
+#說明：前端如果使用表單實現文件上傳，表單的method屬性必須設置為post，enctype屬性需要設置為multipart/form-data，表單中type屬性為file的input標籤，就是上傳文件的文件選擇器。
+
+實現上傳功能的視圖函數如下所示。
+    from django.views.decorators.csrf import csrf_exempt
+
+    @csrf_exempt
+    def upload(request):
+        # 如果上傳的文件小於2.5M，則photo對象的類型為InMemoryUploadedFile，文件在內存中
+        # 如果上傳的文件超過2.5M，則photo對象的類型為TemporaryUploadedFile，文件在臨時路徑下
+        photo = request.FILES.get('photo')
+        _, ext = os.path.splitext(photo.name)
+        # 通過UUID和原來文件的擴展名生成獨一無二的新的文件名
+        filename = f'{uuid.uuid1().hex}{ext}'
+        # 對於內存中的文件，可以使用上面封裝好的函數upload_stream_to_qiniu上傳文件到七牛雲
+        # 如果文件保存在臨時路徑下，可以使用upload_file_to_qiniu實現文件上傳
+        upload_stream_to_qiniu(filename, photo.file, photo.size)
+        return redirect('/static/html/upload.html')
+
+#注意：上面的視圖函數使用了csrf_exempt裝飾器，該裝飾器能夠讓表單免除必須提供CSRF令牌的要求。此外，代碼第11行使用了uuid模塊的uuid1函數來生成全局唯一標識符。
+
+運行項目嘗試文件上傳的功能，文件上傳成功後，可以在七牛雲“空間管理”中點擊自己空間並進入“文件管理”界面，在這裡可以看到我們剛才上傳成功的文件，而且可以通過七牛雲提供的域名獲取該文件。
