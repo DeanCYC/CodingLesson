@@ -1,0 +1,187 @@
+DRF使用入門
+在Django項目中，如果要實現REST架構，即將網站的資源發布成REST風格的API接口，可以使用著名的三方庫djangorestframework ，我們通常將其簡稱為DRF。
+
+安裝和配置DRF
+安裝DRF。
+    pip install djangorestframework
+
+配置DRF。
+    INSTALLED_APPS = [
+
+        'rest_framework',
+        
+    ]
+
+    # 下面的配置根據項目需要進行設置
+    REST_FRAMEWORK = {
+        # 配置默認頁面大小
+        # 'PAGE_SIZE': 10,
+        # 配置默認的分頁類
+        # 'DEFAULT_PAGINATION_CLASS': '...',
+        # 配置異常處理器
+        # 'EXCEPTION_HANDLER': '...',
+        # 配置默認解析器
+        # 'DEFAULT_PARSER_CLASSES': (
+        #     'rest_framework.parsers.JSONParser',
+        #     'rest_framework.parsers.FormParser',
+        #     'rest_framework.parsers.MultiPartParser',
+        # ),
+        # 配置默認限流類
+        # 'DEFAULT_THROTTLE_CLASSES': (
+        #     '...'
+        # ),
+        # 配置默認授權類
+        # 'DEFAULT_PERMISSION_CLASSES': (
+        #     '...',
+        # ),
+        # 配置默認認證類
+        # 'DEFAULT_AUTHENTICATION_CLASSES': (
+        #     '...',
+        # ),
+    }
+
+編寫序列化器
+前後端分離的開發需要後端為前端、移動端提供API數據接口，而API接口通常情況下都是返回JSON格式的數據，這就需要對模型對象進行序列化處理。 DRF中封裝了Serializer類和ModelSerializer類用於實現序列化操作，通過繼承Serializer類或ModelSerializer類，我們可以自定義序列化器，用於將對象處理成字典，代碼如下所示。
+    from rest_framework import serializers 
+
+
+    class SubjectSerializer(serializers.ModelSerializer):
+
+        class Meta:
+            model = Subject
+            fields = '__all__'
+
+上面的代碼直接繼承了ModelSerializer，通過Meta類的model屬性指定要序列化的模型以及fields屬性指定需要序列化的模型字段，稍後我們就可以在視圖函數中使用該類來實現對Subject模型的序列化。
+
+編寫視圖函數
+DRF框架支持兩種實現數據接口的方式，一種是FBV（基於函數的視圖），另一種是CBV（基於類的視圖）。我們先看看FBV的方式如何實現數據接口，代碼如下所示。
+    from rest_framework.decorators import api_view
+    from rest_framework.response import Response
+
+
+    @api_view(('GET', ))
+    def show_subjects(request: HttpRequest) -> HttpResponse:
+        subjects = Subject.objects.all().order_by('no')
+        # 創建序列化器對象並指定要序列化的模型
+        serializer = SubjectSerializer(subjects, many=True)
+        # 通過序列化器的data屬性獲得模型對應的字典並通過創建Response對象返回JSON格式的數據
+        return Response(serializer.data)
+
+對比上一個章節的使用bpmapper實現模型序列化的代碼，使用DRF的代碼更加簡單明了，而且DRF本身自帶了一套頁面，可以方便我們查看我們使用DRF定制的數據接口。
+
+直接使用上一節寫好的頁面，就可以通過Vue.js把上面接口提供的學科數據渲染並展示出來，此處不再進行贅述。
+
+實現老師信息數據接口
+
+編寫序列化器。
+    class SubjectSimpleSerializer(serializers.ModelSerializer):
+
+        class Meta:
+            model = Subject
+            fields = ('no', 'name')
+
+
+    class TeacherSerializer(serializers.ModelSerializer):
+
+        class Meta:
+            model = Teacher
+            exclude = ('subject', )
+
+編寫視圖函數。
+    @api_view(('GET', ))
+    def show_teachers(request: HttpRequest) -> HttpResponse:
+        try:
+            sno = int(request.GET.get('sno'))
+            subject = Subject.objects.only('name').get(no=sno)
+            teachers = Teacher.objects.filter(subject=subject).defer('subject').order_by('no')
+            subject_seri = SubjectSimpleSerializer(subject)
+            teacher_seri = TeacherSerializer(teachers, many=True)
+            return Response({'subject': subject_seri.data, 'teachers': teacher_seri.data})
+        except (TypeError, ValueError, Subject.DoesNotExist):
+            return Response(status=404)
+
+配置URL映射。
+    urlpatterns = [
+        
+        path('api/teachers/', show_teachers),
+        
+    ]
+
+通過Vue.js渲染頁面。
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>老師信息</title>
+        <style>
+            /* 此處省略掉層疊樣式表 */
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <h1>{{ subject.name }}學科的老師信息</h1>
+            <hr>
+            <h2 v-if="loaded && teachers.length == 0">暫無該學科老師信息</h2>
+            <div class="teacher" v-for="teacher in teachers">
+                <div class="photo">
+                    <img :src="'/static/images/' + teacher.photo" height="140" alt="">
+                </div>
+                <div class="info">
+                    <div>
+                        <span><strong>姓名：{{ teacher.name }}</strong></span>
+                        <span>性別：{{ teacher.sex | maleOrFemale }}</span>
+                        <span>出生日期：{{ teacher.birth }}</span>
+                    </div>
+                    <div class="intro">{{ teacher.intro }}</div>
+                    <div class="comment">
+                        <a href="" @click.prevent="vote(teacher, true)">好評</a>&nbsp;&nbsp;
+                        (<strong>{{ teacher.good_count }}</strong>)
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <a href="" @click.prevent="vote(teacher, false)">差評</a>&nbsp;&nbsp;
+                        (<strong>{{ teacher.bad_count }}</strong>)
+                    </div>
+                </div>
+            </div>
+            <a href="/static/html/subjects.html">返回首頁</a>
+        </div>
+        <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+        <script>
+            let app = new Vue({
+                el: '#container',
+                data: {
+                    subject: {},
+                    teachers: [],
+                    loaded: false
+                },
+                created() {
+                    fetch('/api/teachers/' + location.search)
+                        .then(resp => resp.json())
+                        .then(json => {
+                            this.subject = json.subject
+                            this.teachers = json.teachers
+                        })
+                },
+                filters: {
+                    maleOrFemale(sex) {
+                        return sex? '男': '女'
+                    }
+                },
+                methods: {
+                vote(teacher, flag) {
+                        let url = flag? '/praise/' : '/criticize/'
+                        url += '?tno=' + teacher.no
+                        fetch(url).then(resp => resp.json()).then(json => {
+                            if (json.code === 10000) {
+                                if (flag) {
+                                    teacher.good_count = json.count
+                                } else {
+                                    teacher.bad_count = json.count
+                                }
+                            }
+                        })
+                    }
+                }
+            })
+        </script>
+    </body>
+    </html>
