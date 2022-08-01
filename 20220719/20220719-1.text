@@ -1,0 +1,76 @@
+前後端分離下的用戶登錄
+之前我們提到過， HTTP是無狀態的，一次請求結束連接斷開，下次服務器再收到請求，它就不知道這個請求是哪個用戶發過來的。但是對於一個Web應用而言，它是需要有狀態管理的，這樣才能讓服務器知道HTTP請求來自哪個用戶，從而判斷是否允許該用戶請求以及為用戶提供更好的服務，這個過程就是常說的會話管理。
+
+之前我們做會話管理（用戶跟踪）的方法是：用戶登錄成功後，在服務器端通過一個session對象保存用戶相關數據，然後把session對象的ID寫入瀏覽器的cookie中；下一次請求時，HTTP請求頭中攜帶cookie的數據，服務器從HTTP請求頭讀取cookie中的sessionid，根據這個標識符找到對應的session對象，這樣就能夠獲取到之前保存在session中的用戶數據。我們剛才說過，REST架構是最適合互聯網應用的架構，它強調了HTTP的無狀態性，這樣才能保證應用的水平擴展能力（當並發訪問量增加時，可以通過增加新的服務器節點來為系統擴容）。顯然，基於session實現用戶跟踪的方式需要服務器保存session對象，在做水平擴展增加新的服務器節點時，需要復制和同步session對象，這顯然是非常麻煩的。解決這個問題有兩種方案，一種是架設緩存服務器（如Redis），讓多個服務器節點共享緩存服務並將session對象直接置於緩存服務器中；另一種方式放棄基於session的用戶跟踪，使用基於token的用戶跟踪。
+
+基於token的用戶跟踪是在用戶登錄成功後，為用戶生成身份標識並保存在瀏覽器本地存儲（localStorage、sessionStorage、cookie等）中，這樣的話服務器不需要保存用戶狀態，從而可以很容易的做到水平擴展。基於token的用戶跟踪具體流程如下：
+    1.用戶登錄時，如果登錄成功就按照某種方式為用戶生成一個令牌（token），該令牌中通常包含了用戶標識、過期時間等信息而且需要加密並生成指紋（避免偽造或篡改令牌），服務器將令牌返回給前端；
+    2.前端獲取到服務器返回的token，保存在瀏覽器本地存儲中（可以保存在localStorage或sessionStorage中，對於使用Vue.js的前端項目來說，還可以通過Vuex進行狀態管理）；
+    3.對於使用了前端路由的項目來說，前端每次路由跳轉，可以先判斷localStroage中有無token，如果沒有則跳轉到登錄頁；
+    4.每次請求後端數據接口，在HTTP請求頭里攜帶token；後端接口判斷請求頭有無token，如果沒有token以及token是無效的或過期的，服務器統一返回401；
+    5.如果前端收到HTTP響應狀態碼401，則重定向到登錄頁面。
+
+通過上面的描述，相信大家已經發現了，基於token的用戶跟踪最為關鍵是在用戶登錄成功時，要為用戶生成一個token作為用戶的身份標識。生成token的方法很多，其中一種比較成熟的解決方案是使用JSON Web Token。
+
+JWT概述
+JSON Web Token通常簡稱為JWT，它是一種開放標準（RFC 7519）。隨著RESTful架構的流行，越來越多的項目使用JWT作為用戶身份認證的方式。 JWT相當於是三個JSON對象經過編碼後，用.分隔並組合到一起，這三個JSON對象分別是頭部（header）、載荷（payload）和簽名（signature），如下圖所示。
+
+1.頭部
+    {
+    "alg": "HS256",
+    "typ": "JWT"
+    }
+其中，alg屬性表示簽名的算法，默認是HMAC SHA256（簡寫成HS256）；typ屬性表示這個令牌的類型，JWT中都統一書寫為JWT。
+
+2.載荷
+載荷部分用來存放實際需要傳遞的數據。 JWT官方文檔中規定了7個可選的字段：
+    iss ：簽發人
+    exp：過期時間
+    sub：主題
+    aud：受眾
+    nbf：生效時間
+    iat：簽發時間
+    jti：編號
+
+除了官方定義的字典，我們可以根據應用的需要添加自定義的字段，如下所示。
+    {
+    "sub": "1234567890",
+    "nickname": "jackfrued",
+    "role": "admin"
+    }
+
+4.簽名
+簽名部分是對前面兩部分生成一個指紋，防止數據偽造和篡改。實現簽名首先需要指定一個密鑰。這個密鑰只有服務器才知道，不能洩露給用戶。然後，使用頭部指定的簽名算法（默認是HS256），按照下面的公式產生簽名。
+    HS256(base64Encode(header) + '.' + base64Encode(payload), secret)
+算出簽名以後，把頭部、載荷、簽名三個部分拼接成一個字符串，每個部分用.進行分隔，這樣一個JWT就生成好了。
+
+JWT的優缺點
+使用JWT的優點非常明顯，包括：
+    1.更容易實現水平擴展，因為令牌保存在瀏覽器中，服務器不需要做狀態管理。
+    2.更容易防範CSRF攻擊，因為在請求頭中添加localStorage或sessionStorage中的token必須靠JavaScript代碼完成，而不是自動添加到請求頭中的。
+    3.可以防偽造和篡改，因為JWT有簽名，偽造和篡改的令牌無法通過簽名驗證，會被認定是無效的令牌。
+
+當然，任何技術不可能只有優點沒有缺點，JWT也有諸多缺點，大家需要在使用的時候引起注意，具體包括：
+    1.可能會遭受到XSS攻擊（跨站腳本攻擊），通過注入惡意腳本執行JavaScript代碼獲取到用戶令牌。
+    2.在令牌過期之前，無法作廢已經頒發的令牌，要解決這個問題，還需要額外的中間層和代碼來輔助。
+    3.JWT是用戶的身份令牌，一旦洩露，任何人都可以獲得該用戶的所有權限。為了降低令牌被盜用後產生的風險，JWT的有效期應該設置得比較短。對於一些比較重要的權限，使用時應通過其他方式再次對用戶進行認證，例如短信驗證碼等。
+
+使用PyJWT
+在Python代碼中，可以使用三方庫PyJWT生成和驗證JWT，下面是安裝PyJWT的命令。
+    pip install pyjwt
+
+生成令牌。
+    payload = {
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
+        'userid': 10001
+    }
+    token = jwt.encode(payload, settings.SECRET_KEY).decode()
+
+驗證令牌。
+    try:
+        token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1OTQ4NzIzOTEsInVzZXJpZCI6MTAwMDF9.FM-bNxemWLqQQBIsRVvc4gq71y42I9m2zt5nlFxNHUo'
+        payload = jwt.decode(token, settings.SECRET_KEY)
+    except InvalidTokenError:
+        raise AuthenticationFailed('無效的令牌或令牌已經過期')
+
+如果不清楚JWT具體的使用方式，可以先看看第55天的內容，裡面提供了完整的投票項目代碼的地址。
