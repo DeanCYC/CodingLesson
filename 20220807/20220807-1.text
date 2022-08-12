@@ -1,0 +1,201 @@
+使用 Thread 類創建線程對象
+通過上面的代碼可以看出，直接使用Thread類的構造器就可以創建線程對象，而線程對象的start()方法可以啟動一個線程。線程啟動後會執行target參數指定的函數，當然前提是獲得 CPU 的調度；如果target指定的線程要執行的目標函數有參數，需要通過args參數為其進行指定，對於關鍵字參數，可以通過kwargs參數進行傳入。 Thread類的構造器還有很多其他的參數，我們遇到的時候再為大家進行講解，目前需要大家掌握的，就是target、args和kwargs。
+
+繼承 Thread 類自定義線程
+除了上面的代碼展示的創建線程的方式外，還可以通過繼承Thread類並重寫run()方法的方式來自定義線程，具體的代碼如下所示。
+    import random
+    import time
+    from threading import Thread
+
+
+    class DownloadThread(Thread):
+
+        def __init__(self, filename):
+            self.filename = filename
+            super().__init__()
+
+        def run(self):
+            start = time.time()
+            print(f'開始下載 {self.filename}.')
+            time.sleep(random.randint(3, 6))
+            print(f'{self.filename} 下載完成.')
+            end = time.time()
+            print(f'下載耗時: {end - start:.3f}秒.')
+
+
+    def main():
+        threads = [
+            DownloadThread('Python從入門到住院.pdf'),
+            DownloadThread('MySQL從刪庫到跑路.avi'),
+            DownloadThread('Linux從精通到放棄.mp4')
+        ]
+        start = time.time()
+        # 啟動三個線程
+        for thread in threads:
+            thread.start()
+        # 等待線程結束
+        for thread in threads:
+            thread.join()
+        end = time.time()
+        print(f'總耗時: {end - start:.3f}秒.')
+
+
+    if __name__ == '__main__':
+        main()
+
+使用線程池
+我們還可以通過線程池的方式將任務放到多個線程中去執行，通過線程池來使用線程應該是多線程編程最理想的選擇。事實上，線程的創建和釋放都會帶來較大的開銷，頻繁的創建和釋放線程通常都不是很好的選擇。利用線程池，可以提前準備好若干個線程，在使用的過程中不需要再通過自定義的代碼創建和釋放線程，而是直接復用線程池中的線程。 Python 內置的concurrent.futures模塊提供了對線程池的支持，代碼如下所示。
+    import random
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Thread
+
+
+    def download(*, filename):
+        start = time.time()
+        print(f'開始下載 {filename}.')
+        time.sleep(random.randint(3, 6))
+        print(f'{filename} 下載完成.')
+        end = time.time()
+        print(f'下載耗時: {end - start:.3f}秒.')
+
+
+    def main():
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            filenames = ['Python從入門到住院.pdf', 'MySQL從刪庫到跑路.avi', 'Linux從精通到放棄.mp4']
+            start = time.time()
+            for filename in filenames:
+                pool.submit(download, filename=filename)
+        end = time.time()
+        print(f'總耗時: {end - start:.3f}秒.')
+
+
+    if __name__ == '__main__':
+        main()
+
+守護線程
+所謂“守護線程”就是在主線程結束的時候，不值得再保留的執行線程。這裡的不值得保留指的是守護線程會在其他非守護線程全部運行結束之後被銷毀，它守護的是當前進程內所有的非守護線程。簡單的說，守護線程會跟隨主線程一起掛掉，而主線程的生命週期就是一個進程的生命週期。如果不理解，我們可以看一段簡單的代碼。
+    import time
+    from threading import Thread
+
+
+    def display(content):
+        while True:
+            print(content, end='', flush=True)
+            time.sleep(0.1)
+
+
+    def main():
+        Thread(target=display, args=('Ping', )).start()
+        Thread(target=display, args=('Pong', )).start()
+
+
+    if __name__ == '__main__':
+        main()
+#說明：上面的代碼中，我們將print函數的參數flush設置為True，這是因為flush參數的值如果為False，而print又沒有做換行處理，就會導致每次print輸出的內容被放到操作系統的輸出緩衝區，直到緩衝區被輸出的內容塞滿，才會清空緩衝區產生一次輸出。上述現像是操作系統為了減少 I/O 中斷，提升 CPU 利用率做出的設定，為了讓代碼產生直觀交互，我們才將flush參數設置為True，強制每次輸出都清空輸出緩衝區。
+
+上面的代碼運行起來之後是不會停止的，因為兩個子線程中都有死循環，除非你手動中斷代碼的執行。但是，如果在創建線程對象時，將名為daemon的參數設置為True，這兩個線程就會變成守護線程，那麼在其他線程結束時，即便有死循環，兩個守護線程也會掛掉，不會再繼續執行下去，代碼如下所示。
+    import time
+    from threading import Thread
+
+
+    def display(content):
+        while True:
+            print(content, end='', flush=True)
+            time.sleep(0.1)
+
+
+    def main():
+        Thread(target=display, args=('Ping', ), daemon=True).start()
+        Thread(target=display, args=('Pong', ), daemon=True).start()
+        time.sleep(5)
+
+
+    if __name__ == '__main__':
+        main()
+
+上面的代碼，我們在主線程中添加了一行time.sleep(5)讓主線程休眠5秒，在這個過程中，輸出Ping和Pong的守護線程會持續運轉，直到主線程在5秒後結束，這兩個守護線程也被銷毀，不再繼續運行。
+#思考：如果將上面代碼第12行的daemon=True去掉，代碼會怎樣執行？有興趣的讀者可以嘗試一下，並看看實際執行的結果跟你想像的是否一致。
+
+資源競爭
+在編寫多線程代碼時，不可避免的會遇到多個線程競爭同一個資源（對象）的情況。在這種情況下，如果沒有合理的機制來保護被競爭的資源，那麼就有可能出現非預期的狀況。下面的代碼創建了100個線程向同一個銀行賬戶（初始餘額為0元）轉賬，每個線程轉賬金額為1元。在正常的情況下，我們的銀行賬戶最終的餘額應該是100元，但是運行下面的代碼我們並不能得到100元這個結果。
+    import time
+
+    from concurrent.futures import ThreadPoolExecutor
+
+
+    class Account(object):
+        """銀行賬戶"""
+
+        def __init__(self):
+            self.balance = 0.0
+
+        def deposit(self, money):
+            """存錢"""
+            new_balance = self.balance + money
+            time.sleep(0.01)
+            self.balance = new_balance
+
+
+    def main():
+        """主函數"""
+        account = Account()
+        with ThreadPoolExecutor(max_workers=16) as pool:
+            for _ in range(100):
+                pool.submit(account.deposit, 1)
+        print(account.balance)
+
+
+    if __name__ == '__main__':
+        main()
+
+上面代碼中的Account類代表了銀行賬戶，它的deposit方法代表存款行為，參數money代表存入的金額，該方法通過time.sleep函數模擬受理存款需要一段時間。我們通過線程池的方式啟動了100個線程向一個賬戶轉賬，但是上面的代碼並不能運行出100這個我們期望的結果，這就是在多個線程競爭一個資源的時候，可能會遇到的數據不一致的問題。注意上面代碼的第14行，當多個線程都執行到這行代碼時，它們會在相同的餘額上執行加上存入金額的操作，這就會造成“丟失更新”現象，即之前修改數據的成果被後續的修改給覆蓋掉了，所以才得不到正確的結果。
+
+要解決上面的問題，可以使用鎖機制，通過鎖對操作數據的關鍵代碼加以保護。 Python 標準庫的threading模塊提供了Lock和RLock類來支持鎖機制，這裡我們不去深究二者的區別，建議大家直接使用RLock。接下來，我們給銀行賬戶添加一個鎖對象，通過鎖對象來解決剛才存款時發生“丟失更新”的問題，代碼如下所示。
+    import time
+
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import RLock
+
+
+    class Account(object): 
+
+上面代碼中，獲得鎖和釋放鎖的操作也可以通過上下文語法來實現，使用上下文語法會讓代碼更加簡單優雅，這也是我們推薦大家使用的方式。
+    import time
+
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import RLock
+
+
+    class Account(object):
+        """銀行賬戶"""
+
+        def __init__(self):
+            self.balance = 0.0
+            self.lock = RLock()
+
+        def deposit(self, money):
+            # 通過上下文語法獲得鎖和釋放鎖
+            with self.lock:
+                new_balance = self.balance + money
+                time.sleep(0.01)
+                self.balance = new_balance
+
+
+    def main():
+        """主函數"""
+        account = Account()
+        with ThreadPoolExecutor(max_workers=16) as pool:
+            for _ in range(100):
+                pool.submit(account.deposit, 1)
+        print(account.balance)
+
+
+    if __name__ == '__main__':
+        main()
+#思考：將上面的代碼修改為5個線程向銀行賬戶存錢，5個線程從銀行賬戶取錢，取錢的線程在銀行賬戶餘額不足時，需要停下來等待存錢的線程將錢存入後再嘗試取錢。這裡需要用到線程調度的知識，大家可以自行研究下threading模塊中的Condition類，看看是否能夠完成這個任務。
+
+GIL問題
+如果使用官方的 Python 解釋器（通常稱之為 CPython）運行 Python 程序，我們並不能通過使用多線程的方式將 CPU 的利用率提升到逼近400%（對於4核 CPU）或逼近800%（對於8核 CPU）這樣的水平，因為 CPython 在執行代碼時，會受到 GIL（全局解釋器鎖）的限制。具體的說，CPython 在執行任何代碼時，都需要對應的線程先獲得 GIL，然後每執行100條（字節碼）指令，CPython 就會讓獲得 GIL 的線程主動釋放 GIL，這樣別的線程才有機會執行。因為 GIL 的存在，無論你的 CPU 有多少個核，我們編寫的 Python 代碼也沒有機會真正並行的執行。
+
+GIL 是官方 Python 解釋器在設計上的歷史遺留問題，要解決這個問題，讓多線程能夠發揮 CPU 的多核優勢，需要重新實現一個不帶 GIL 的 Python 解釋器。這個問題按照官方的說法，在 Python 發布4.0版本時會得到解決，就讓我們拭目以待吧。當下，對於 CPython 而言，如果希望充分發揮 CPU 的多核優勢，可以考慮使用多進程，因為每個進程都對應一個 Python 解釋器，因此每個進程都有自己獨立的 GIL，這樣就可以突破 GIL 的限制。在下一個章節中，我們會為大家介紹關於多進程的相關知識，並對多線程和多進程的代碼及其執行效果進行比較。
