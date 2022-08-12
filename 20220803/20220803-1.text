@@ -1,0 +1,58 @@
+相關工具
+下面我們先介紹一些開發爬蟲程序的輔助工具，這些工具相信能幫助你事半功倍。
+1.Chrome Developer Tools：谷歌瀏覽器內置的開發者工具。該工具最常用的幾個功能模塊是：
+    - 元素（ELements）：用於查看或修改 HTML 元素的屬性、CSS 屬性、監聽事件等。 CSS 可以即時修改，即時顯示，大大方便了開發者調試頁面。
+    - 控制台（Console）：用於執行一次性代碼，查看 JavaScript 對象，查看調試日誌信息或異常信息。控制台其實就是一個執行 JavaScript 代碼的交互式環境。
+    - 源代碼（Sources）：用於查看頁面的 HTML 文件源代碼、JavaScript 源代碼、CSS 源代碼，此外最重要的是可以調試 JavaScript 源代碼，可以給代碼添加斷點和單步執行。
+    - 網絡（Network）：用於 HTTP 請求、HTTP 響應以及與網絡連接相關的信息。
+    - 應用（Application）：用於查看瀏覽器本地存儲、後台任務等內容，本地存儲主要包括Cookie、Local Storage、Session Storage等。
+2. Postman：功能強大的網頁調試與 RESTful 請求工具。 Postman可以幫助我們模擬請求，非常方便的定制我們的請求以及查看服務器的響應。
+3. HTTPie：命令行HTTP客戶端。
+安裝。
+    pip install httpie
+
+使用。
+    http --header http --header https://movie.douban.com/
+
+    HTTP/1.1 200 OK
+    Connection: keep-alive
+    Content-Encoding: gzip
+    Content-Type: text/html; charset=utf-8
+    Date: Tue, 24 Aug 2021 16:48:00 GMT
+    Keep-Alive: timeout=30
+    Server: dae
+    Set-Cookie: bid=58h4BdKC9lM; Expires=Wed, 24-Aug-22 16:48:00 GMT; Domain=.douban.com; Path=/
+    Strict-Transport-Security: max-age=15552000
+    Transfer-Encoding: chunked
+    X-Content-Type-Options: nosniff
+    X-DOUBAN-NEWBID: 58h4BdKC9lM
+4. builtwith庫：識別網站所用技術的工具。
+安裝。
+    pip install builtwith
+
+使用。
+    import ssl
+
+    import builtwith
+
+    ssl._create_default_https_context = ssl._create_unverified_context
+    print(builtwith.parse('http://www.bootcss.com/'))
+
+5.python-whois庫：查詢網站所有者的工具。
+安裝。
+    pip3 install python-whois
+使用。
+    import whois
+
+    print(whois.whois('https://www.bootcss.com'))
+
+爬蟲的基本工作流程
+一個基本的爬蟲通常分為數據採集（網頁下載）、數據處理（網頁解析）和數據存儲（將有用的信息持久化）三個部分的內容，當然更為高級的爬蟲在數據採集和處理時會使用並發編程或分佈式技術，這就需要有調度器（安排線程或進程執行對應的任務）、後台管理程序（監控爬蟲的工作狀態以及檢查數據抓取的結果）等的參與。
+一般來說，爬蟲的工作流程包括以下幾個步驟：
+1.設定抓取目標（種子頁面/起始頁面）並獲取網頁。
+2.當服務器無法訪問時，按照指定的重試次數嘗試重新下載頁面。
+3.在需要的時候設置用戶代理或隱藏真實IP，否則可能無法訪問頁面。
+4.對獲取的頁面進行必要的解碼操作然後抓取出需要的信息。
+5.在獲取的頁面中通過某種方式（如正則表達式）抽取出頁面中的鏈接信息。
+6.對鏈接進行進一步的處理（獲取頁面並重複上面的動作）。
+7.將有用的信息進行持久化以備後續的處理。
